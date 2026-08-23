@@ -3,3 +3,9 @@ Entire only records a session once it saves changes — a conversation that
 edits nothing leaves no trace. Use --working to summarise uncommitted work.
 
 --- 2026-08-23 21:08:04 ---
+
+--- 2026-08-23 21:15:11 ---
+  9faf9a1b2f7f8988e8 — 1 claims, 0 corrections -> 2026-08-23-01a03005-cee7-7fd3-bbb1-.md
+  01M0QZWF1HRJTFW6NK — 7 claims, 0 corrections -> 2026-08-23-01a02fce-8ddc-7d70-b952-.md
+
+2 session(s) processed, 0 skipped without spending. Claims appended to out/claims.jsonl

@@ -23,7 +23,7 @@
           },
           {
             "type": "command",
-            "command": "sh -c '\"$(git rev-parse --show-toplevel)/hooks/on-session-end.sh\"'",
+            "command": "sh -c '\"$(git rev-parse --show-toplevel)/hooks/on-session-end.sh\" end'",
             "timeout": 5
           }
         ]
@@ -40,7 +40,7 @@
           },
           {
             "type": "command",
-            "command": "sh -c '\"$(git rev-parse --show-toplevel)/hooks/on-session-end.sh\"'",
+            "command": "sh -c '\"$(git rev-parse --show-toplevel)/hooks/on-session-end.sh\" start'",
             "timeout": 5
           }
         ]
