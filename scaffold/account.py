@@ -22,6 +22,10 @@ from pathlib import Path
 
 import streamlit as st
 
+from paths import load_settings
+
+load_settings()
+
 CONFIG = Path(os.environ.get("CUMULATE_HOME", Path.home() / ".cumulate"))
 SESSION_FILE = CONFIG / "session.json"
 

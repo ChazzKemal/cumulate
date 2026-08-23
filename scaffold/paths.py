@@ -50,3 +50,24 @@ def tools_dir() -> Path:
 
 def inbox_dir() -> Path:
     return workspace() / "inbox"
+
+
+def load_settings() -> None:
+    """Put the shared config and the person's own settings into the environment.
+
+    Streamlit tools are launched on their own, not through the launcher, so they
+    cannot rely on it having exported anything. Without this a tool would have no
+    idea where Supabase is and sign-in would silently do nothing.
+
+    Order matters: shared first, personal second, so a person can override.
+    """
+    for f in (APP / "config.env", workspace() / ".env"):
+        try:
+            for line in f.read_text().splitlines():
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, v = line.split("=", 1)
+                os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+        except OSError:
+            continue

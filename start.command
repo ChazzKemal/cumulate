@@ -11,7 +11,9 @@ cd "$WORKSPACE" || exit 1
 # Fresh machine? Get everything in place first. Does nothing when it already is.
 sh "$APP/scaffold/bootstrap.sh" || exit 1
 
-# Settings live with the person, not with the code.
+# Shared connection settings ship with the code; personal ones live with the
+# person and override them.
+[ -f "$APP/config.env" ] && { set -a; . "$APP/config.env"; set +a; }
 if [ -f "$WORKSPACE/.env" ]; then
   set -a; . "$WORKSPACE/.env"; set +a
 elif [ -f "$APP/.env" ]; then

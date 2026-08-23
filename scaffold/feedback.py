@@ -19,7 +19,9 @@ from pathlib import Path
 
 import streamlit as st
 
-from paths import harvest_out
+from paths import harvest_out, load_settings
+
+load_settings()
 
 
 def _save(tool: str, text: str) -> str:

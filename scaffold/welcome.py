@@ -18,7 +18,9 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import account  # noqa: E402
-from paths import WORKSPACE  # noqa: E402
+from paths import WORKSPACE, load_settings  # noqa: E402
+
+load_settings()
 
 ENV = WORKSPACE / ".env"
 
