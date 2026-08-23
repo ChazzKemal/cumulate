@@ -1,0 +1,7 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+inbox/*
+!inbox/.gitkeep
+.DS_Store
