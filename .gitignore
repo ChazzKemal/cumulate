@@ -1,7 +1,9 @@
+!inbox/.gitkeep
+*.pyc
+.DS_Store
 .env
+.harvest.log
+.streamlit_upload/
 .venv/
 __pycache__/
-*.pyc
 inbox/*
-!inbox/.gitkeep
-.DS_Store
