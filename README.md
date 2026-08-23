@@ -9,6 +9,15 @@ Double-click **start.command** (macOS) or **start.bat** (Windows). Type what you
 
 Give it a file two ways: drop it in **inbox/**, or drag it onto the window. Finished tools land in **tools/**.
 
+## What already exists
+
+    .venv/bin/python scaffold/tools_index.py
+
+Prints every tool, what it does, and how many assumptions it records — read straight
+from each `app.py`, no model involved. The launcher shows this before anything starts,
+and hands the same list to the agent so it offers to extend an existing tool instead
+of quietly building a second one.
+
 ## One-time setup per machine
 
     cp .env.example .env      # then paste the OpenAI key into .env

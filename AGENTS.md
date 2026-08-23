@@ -104,6 +104,18 @@ typed:
 None of this affects whether the session is recorded. Everything said and done is
 captured either way — committing has nothing to do with it.
 
+## Before you build anything new
+
+The launcher tells you which tools already exist. **Check that list first.** If what
+they are asking for is close to something already there, open it, say so, and offer to
+adapt it:
+
+> You already have Shipment Cost Total, which does most of this. Want me to extend
+> that instead of building a second one?
+
+Building a near-duplicate splits the knowledge across two tools and doubles what has
+to be maintained. `scaffold/tools_index.py` prints the list at any time.
+
 ## Building the tool
 
 - Streamlit. Always. `scaffold/app_template.py` is the starting point.
