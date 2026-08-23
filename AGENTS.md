@@ -84,20 +84,18 @@ Ask: **"When would this stop working?"** or **"What case would break this?"**
 
 One question. Write the answer into `ASSUMPTIONS.md`.
 
-### Step 7 — Commit when you changed something. Not otherwise.
+### Step 7 — Never commit unless they ask
 
-If you built or changed a file, commit it, with a message that says what was *learned*,
-not what was typed:
+Do not commit. Not at the end, not "to be safe", not to tidy up. It is their repo and
+their history. Leave the work in place and tell them plainly what you changed.
+
+If they ask you to commit, write a message that says what was *learned*, not what was
+typed:
 
     Returns excluded from cost totals; carrier nulls are pickups
 
-If the session only talked — you answered a question, corrected an assumption, decided
-not to build — **do not manufacture a commit for it.** The conversation is captured
-regardless, and a repo full of empty commits is worse than useless.
-
-The one thing worth writing down even with no tool: if you learned something that
-applies beyond this file, append it to the root `ASSUMPTIONS.md` and commit that. That
-is a real change, not a manufactured one.
+None of this affects whether the session is recorded. Everything said and done is
+captured either way — committing has nothing to do with it.
 
 ## Building the tool
 
