@@ -1,7 +1,11 @@
 #!/bin/sh
 # Produces the installer you send someone, with a read-only token baked in.
 #
-#   ./make-installer.sh ghp_xxx you/cumulate you/harvest > ~/Desktop/install-cumulate.sh
+#   ./make-installer.sh <token> you/cumulate you/harvest \
+#       > ~/Desktop/install-cumulate.command && chmod +x ~/Desktop/install-cumulate.command
+#
+# Name it .command, not .sh — double-clicking a .sh on macOS opens it in a text
+# editor. A .command runs in Terminal, which is what someone expects.
 #
 # The repos stay private. The token is a fine-grained GitHub token with
 # Contents: read-only on those two repos and nothing else — it can clone them
