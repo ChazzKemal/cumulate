@@ -84,21 +84,20 @@ Ask: **"When would this stop working?"** or **"What case would break this?"**
 
 One question. Write the answer into `ASSUMPTIONS.md`.
 
-### Step 7 — Always commit, even if you built nothing
+### Step 7 — Commit when you changed something. Not otherwise.
 
-**A session that changes no files is not recorded at all.** The whole conversation is
-lost. So every session ends with a commit, without exception:
-
-- Built a tool? Commit the tool and the updated `ASSUMPTIONS.md`.
-- Just talked, corrected an assumption, answered a question, decided not to build?
-  Write what you learned into `ASSUMPTIONS.md` and commit that.
-
-Use a commit message that says what was learned, not what was typed:
+If you built or changed a file, commit it, with a message that says what was *learned*,
+not what was typed:
 
     Returns excluded from cost totals; carrier nulls are pickups
 
-Never end a session without committing. The conversation is the point, and this is
-what preserves it.
+If the session only talked — you answered a question, corrected an assumption, decided
+not to build — **do not manufacture a commit for it.** The conversation is captured
+regardless, and a repo full of empty commits is worse than useless.
+
+The one thing worth writing down even with no tool: if you learned something that
+applies beyond this file, append it to the root `ASSUMPTIONS.md` and commit that. That
+is a real change, not a manufactured one.
 
 ## Building the tool
 

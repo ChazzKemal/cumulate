@@ -12,14 +12,21 @@ if not f.exists():
 cfg = json.loads(f.read_text())
 cmd = "sh -c '\"$(git rev-parse --show-toplevel)/hooks/on-session-end.sh\"'"
 events = cfg.setdefault("hooks", {})
-group = events.setdefault("SessionEnd", [{"matcher": None, "hooks": []}])
 
-existing = [h for g in group for h in g.get("hooks", []) if "on-session-end.sh" in h.get("command", "")]
-if existing:
-    print("Already installed.")
+# SessionEnd is the normal trigger. SessionStart is the safety net: if a session
+# was killed hard and SessionEnd never fired, the next one sweeps it up.
+added = []
+for event in ("SessionEnd", "SessionStart"):
+    group = events.setdefault(event, [{"matcher": None, "hooks": []}])
+    if any("on-session-end.sh" in h.get("command", "") for g in group for h in g.get("hooks", [])):
+        continue
+    group[0].setdefault("hooks", []).append({"type": "command", "command": cmd, "timeout": 5})
+    added.append(event)
+
+if not added:
+    print("Already installed on SessionEnd and SessionStart.")
     sys.exit(0)
 
-group[0].setdefault("hooks", []).append({"type": "command", "command": cmd, "timeout": 5})
 f.write_text(json.dumps(cfg, indent=2) + "\n")
-print("Installed harvest trigger on SessionEnd.")
+print("Installed harvest trigger on " + " and ".join(added) + ".")
 PY
