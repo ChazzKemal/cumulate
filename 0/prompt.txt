@@ -1,0 +1,11 @@
+Files waiting in the inbox: inbox/messy.xlsx. These are gitignored so file search
+will not find them — read them directly by path. Profile the first one with
+scaffold/ingest.py, tell me in plain language what you found, and ask what I need built.
+
+---
+
+write a code that reads the qtys and costs and calculates the total cost
+
+---
+
+yes

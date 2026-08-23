@@ -1,0 +1,66 @@
+{
+  "cli_version": "0.10.2",
+  "checkpoint_id": "01M0QZWF1HRJTFW6NKHQ66A0HP",
+  "session_id": "01a02fce-8ddc-7d70-b952-902426ab51c6",
+  "strategy": "manual-commit",
+  "created_at": "2026-08-23T18:59:46.259904Z",
+  "branch": "master",
+  "checkpoints_count": 3,
+  "save_step_count": 2,
+  "files_touched": [
+    "tools/shipment-cost/ASSUMPTIONS.md",
+    "tools/shipment-cost/app.py"
+  ],
+  "agent": "Codex",
+  "model": "gpt-5.6-sol",
+  "turn_id": "af7fbb9cc6af",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 59179,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 820736,
+    "output_tokens": 7497,
+    "api_call_count": 26
+  },
+  "session_metrics": {
+    "turn_count": 3
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-08-23T18:59:46.237986Z",
+    "agent_lines": 145,
+    "agent_removed": 0,
+    "human_added": 7,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 152,
+    "total_lines_changed": 155,
+    "agent_percentage": 93.54838709677419,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 8,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 1,
+      "user_lines_removed": 0,
+      "agent_lines_added": 146,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "tools/shipment-cost/ASSUMPTIONS.md": 1
+      }
+    }
+  ]
+}
