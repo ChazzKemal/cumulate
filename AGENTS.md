@@ -20,7 +20,13 @@ three seconds is a recorded fact.
 
 ### Step 1 — Look at the file first
 
-Files arrive in `inbox/`. Before asking anything, load the file and profile it: sheet names,
+Files arrive in `inbox/`.
+
+**`inbox/` is gitignored, so file search and glob will not show you what's in it.**
+List it directly (`ls inbox/`) or read the paths the launcher hands you. Never tell
+someone the inbox is empty because a search came back empty — go look.
+
+Before asking anything, load the file and profile it: sheet names,
 headers, row counts, data types, a few sample rows, and anything that looks off (blank
 columns, merged headers, dates stored as text, negative quantities, duplicate keys).
 
