@@ -1,13 +1,14 @@
 # Tool Builder
 
-Engineers describe a spreadsheet problem in plain language and get a working GUI tool.
+Engineers describe a data problem in plain language and get a working GUI tool.
 Every session is captured by Entire, linked to the commit it produced.
 
 ## For the engineer
 
 Double-click **start.command** (macOS) or **start.bat** (Windows). Type what you need.
 
-Drop spreadsheets into **inbox/** first. Finished tools land in **tools/**.
+Give it a file any of three ways: drop it in **inbox/**, drag it onto the window,
+or just say where it is. Finished tools land in **tools/**.
 
 ## One-time setup per machine
 
@@ -22,7 +23,8 @@ Codex will ask once whether to trust this folder. Click yes.
 |---|---|
 | `AGENTS.md` | The elicitation protocol — how the agent interviews, when it asks why |
 | `ASSUMPTIONS.md` | The ledger. Agent writes, engineer corrects. This is the knowledge record |
-| `scaffold/ingest.py` | Spreadsheet loading that survives real files |
+| `scaffold/ingest.py` | One way in for any file type — `profile`, `load`, `describe` |
+| `scaffold/readers/` | One module per file type. Add a module, get a new type |
 | `scaffold/app_template.py` | Streamlit shell every tool starts from |
 | `inbox/` | Engineers drop files here (git-ignored) |
 | `tools/` | Published tools, one folder each |
