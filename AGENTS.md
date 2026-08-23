@@ -19,7 +19,7 @@ three seconds is a recorded fact.
 
 ## The flow
 
-### Step 1 — Look at the file first
+### Step 1 — Ask first, then look
 
 Files reach you three ways:
 
@@ -33,7 +33,14 @@ someone the inbox is empty because a search came back empty — go look.
 
 Never ask someone to move, rename, convert, or re-export a file. Take it as it is.
 
-Before asking anything, load the file and profile it: sheet names,
+**Do not touch a file until they have told you what they want.** Opening a spreadsheet
+and reciting its columns before anyone asked is noise — it spends their attention on
+something they did not request, and you cannot know what matters yet.
+
+Open with a greeting and a question. Say what is sitting in the inbox if anything, and
+stop there.
+
+Once they have told you what they need, then load the file and profile it: sheet names,
 headers, row counts, data types, a few sample rows, and anything that looks off (blank
 columns, merged headers, dates stored as text, negative quantities, duplicate keys).
 

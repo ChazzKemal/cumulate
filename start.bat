@@ -23,10 +23,10 @@ for %%f in (inbox\*) do (
 )
 
 set "PROMPT=You are in the Tool Builder project. Follow AGENTS.md."
-if defined FILES  set "PROMPT=!PROMPT! Files in the inbox: !FILES!."
-if defined FILES (goto :havefiles)
-set "PROMPT=!PROMPT! Greet me in one line and ask what I need built. Mention I can drag a file straight onto this window or drop it in the inbox folder."
-goto :run
+if defined FILES set "PROMPT=!PROMPT! Files sitting in the inbox: !FILES! (gitignored, so file search will not find them - read them by path when the time comes)."
+set "PROMPT=!PROMPT! Greet me in one line, say what is in the inbox if anything, and ask what I need. Do not open, read or profile any file yet - wait until I have told you what I want."
+
+:run
 :havefiles
 set "PROMPT=!PROMPT! The inbox is gitignored, so file search will not find these - read them directly by path. Profile the most likely one with scaffold/ingest.py, say in plain language what you found, and ask what I need built."
 :run
