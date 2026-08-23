@@ -1,0 +1,5 @@
+yes, i want it to now multiply the costs and quantities to tell me the real quantity,
+
+---
+
+the column with 120
