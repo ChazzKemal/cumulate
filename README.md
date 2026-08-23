@@ -29,6 +29,17 @@ Codex will ask once whether to trust this folder. Click yes.
 | `tools/` | Published tools, one folder each |
 | `.codex/hooks.json` | Entire's 7 capture hooks |
 
+## Automatic extraction
+
+When a session ends, `hooks/on-session-end.sh` fires and runs Harvest in the
+background. It returns in ~30ms, so nobody waits. Output goes to `.harvest.log`,
+summaries to `../Harvest/out/`.
+
+    ./install-hooks.sh      # idempotent; re-run after `entire enable --force`
+
+If a session is killed hard and `SessionEnd` never fires, nothing is lost — Harvest
+is incremental, so the next session's run picks up whatever was missed.
+
 ## Reading the captured knowledge
 
     entire session list              # sessions
