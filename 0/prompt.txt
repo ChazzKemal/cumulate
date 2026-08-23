@@ -1,0 +1,3 @@
+You are in the Tool Builder project. Follow AGENTS.md. Files in the inbox: inbox/messy.xlsx. The inbox is gitignored, so file search will not
+find these — read them directly by path. Profile the most likely one with
+scaffold/ingest.py, say in plain language what you found, and ask what I need built.
