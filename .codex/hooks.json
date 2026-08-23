@@ -23,7 +23,7 @@
           },
           {
             "type": "command",
-            "command": "sh -c '\"$(git rev-parse --show-toplevel)/hooks/on-session-end.sh\" end'",
+            "command": "\"/Users/test/Coding/Cumulate/.venv/bin/python\" \"/Users/test/Coding/Cumulate/hooks/on_session_end.py\" end",
             "timeout": 5
           }
         ]
@@ -40,7 +40,7 @@
           },
           {
             "type": "command",
-            "command": "sh -c '\"$(git rev-parse --show-toplevel)/hooks/on-session-end.sh\" start'",
+            "command": "\"/Users/test/Coding/Cumulate/.venv/bin/python\" \"/Users/test/Coding/Cumulate/hooks/on_session_end.py\" start",
             "timeout": 5
           }
         ]

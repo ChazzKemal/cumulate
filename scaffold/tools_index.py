@@ -10,7 +10,10 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from paths import workspace  # noqa: E402
+
+ROOT = workspace()
 TOOLS = ROOT / "tools"
 
 

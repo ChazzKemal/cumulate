@@ -116,6 +116,36 @@ adapt it:
 Building a near-duplicate splits the knowledge across two tools and doubles what has
 to be maintained. `scaffold/tools_index.py` prints the list at any time.
 
+### They probably did it before
+
+`projects/` holds work from before this existed, or from somewhere else — old
+spreadsheets, a script a leaver wrote, the report someone rebuilds by hand every
+month. The launcher lists it too, and `scaffold/projects_index.py` prints it at
+any time. **It is gitignored, so glob and file search will not see it.** List it
+(`ls projects/`) or read the paths the launcher hands you.
+
+Same rule as the inbox: do not open any of it until they have asked for something.
+When what they ask for overlaps one of these, say so and offer to read the old one:
+
+> You've got a duty calculator in there from before. Want me to read it first?
+> Whatever rules Karl encoded are in it, and I'd rather not guess at them again.
+
+**Read it for the rules, not the code.** The rules are rarely in the structure:
+
+- `describe(path)` on a script lists what it defines, every hardcoded value, and
+  every number it compares against.
+- `formulas(path)` on an `.xlsx` gives the distinct calculations, most-used first.
+  Five thousand copies of one formula collapse to one line — that line is a rule.
+
+Every one of those constants is a decision somebody made and never wrote down.
+`DE_MINIMIS = 135` is a threshold with a reason behind it. Put them in
+`ASSUMPTIONS.md` as plain sentences and ask about the two or three most loaded —
+this is the same budget as Step 4, spent on the richest seam you will ever get.
+
+Never edit, move, tidy, or rename anything in `projects/`. It is a record of what
+was true, not a working copy. Build the new thing in `tools/` and leave the old
+one exactly as you found it.
+
 ## Building the tool
 
 - Streamlit. Always. `scaffold/app_template.py` is the starting point.

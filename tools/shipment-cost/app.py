@@ -7,8 +7,13 @@ import pandas as pd
 import streamlit as st
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+import os  # noqa: E402
+PROJECT_ROOT = Path(os.environ.get("CUMULATE_APP")
+                    or Path(__file__).resolve().parents[2])
 sys.path.insert(0, str(PROJECT_ROOT / "scaffold"))
+from account import sign_in_panel  # noqa: E402
+from feedback import feature_box  # noqa: E402
+from mysessions import my_sessions_panel  # noqa: E402
 from ingest import load, list_sheets  # noqa: E402
 
 
@@ -43,6 +48,8 @@ def make_download(shipments: pd.DataFrame, total_cost: float) -> bytes:
 
 
 st.set_page_config(page_title="Shipment Cost Total", layout="wide")
+
+sign_in_panel()
 st.title("Shipment Cost Total")
 st.caption("Read shipment quantities and costs, then calculate the total cost.")
 
@@ -136,3 +143,6 @@ st.download_button(
 with st.expander("What this tool assumes"):
     assumptions = Path(__file__).parent / "ASSUMPTIONS.md"
     st.markdown(assumptions.read_text())
+
+my_sessions_panel()
+feature_box(Path(__file__).parent.name)

@@ -5,10 +5,19 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scaffold"))
+# The shared code may live somewhere else entirely — a tool sits in the person's
+# own folder, the scaffold ships with the app and is updated separately.
+import os  # noqa: E402
+_app = Path(os.environ.get("CUMULATE_APP") or Path(__file__).resolve().parents[2])
+sys.path.insert(0, str(_app / "scaffold"))
 from ingest import load, list_sheets  # noqa: E402
+from account import sign_in_panel  # noqa: E402
+from feedback import feature_box  # noqa: E402
+from mysessions import my_sessions_panel  # noqa: E402
 
 st.set_page_config(page_title="TOOL_NAME", layout="wide")
+
+sign_in_panel()
 st.title("TOOL_NAME")
 st.caption("ONE_LINE_DESCRIPTION")
 
@@ -46,3 +55,6 @@ st.download_button("Download as Excel", buf.read_bytes(), "result.xlsx")
 with st.expander("What this tool assumes"):
     a = Path(__file__).parent / "ASSUMPTIONS.md"
     st.markdown(a.read_text() if a.exists() else "_No assumptions recorded._")
+
+my_sessions_panel()
+feature_box(Path(__file__).parent.name)

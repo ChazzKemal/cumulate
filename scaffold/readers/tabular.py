@@ -156,3 +156,55 @@ def _coerce(s: pd.Series) -> pd.Series:
         if converted.notna().sum() >= s.notna().sum() * 0.9:
             return converted
     return s
+
+
+# --- formulas -------------------------------------------------------------
+# Loading a spreadsheet gives you the numbers. The rules are in the formulas,
+# and pandas throws those away. For a file somebody maintained for years, the
+# formula bar is the documentation — so read it deliberately, not on every
+# profile, because it means parsing the workbook a second time.
+
+_FORMULA_EXT = {".xlsx", ".xlsm"}
+_REF_DIGITS = re.compile(r"(?<=[A-Za-z$])(\d+)")
+
+
+def _shape(formula: str) -> str:
+    """Strip row numbers so a column of 5,000 copies collapses to one rule."""
+    return _REF_DIGITS.sub("#", formula)
+
+
+def formulas(path: str | Path, limit: int = 40) -> dict:
+    """The distinct calculations in a workbook, most-used first.
+
+    Returns {sheet: [{formula, example, count}]}. Empty for anything that is
+    not a real .xlsx/.xlsm — .xls and .csv carry no formulas to read.
+    """
+    from collections import Counter
+
+    path = Path(path)
+    if path.suffix.lower() not in _FORMULA_EXT:
+        return {}
+
+    from openpyxl import load_workbook
+
+    wb = load_workbook(path, data_only=False, read_only=True)
+    try:
+        out = {}
+        for ws in wb.worksheets:
+            seen: Counter = Counter()
+            example: dict[str, str] = {}
+            for row in ws.iter_rows():
+                for cell in row:
+                    v = cell.value
+                    if isinstance(v, str) and v.startswith("="):
+                        shape = _shape(v)
+                        seen[shape] += 1
+                        example.setdefault(shape, f"{cell.coordinate}: {v}")
+            if seen:
+                out[ws.title] = [
+                    {"formula": s, "example": example[s], "count": n}
+                    for s, n in seen.most_common(limit)
+                ]
+        return out
+    finally:
+        wb.close()

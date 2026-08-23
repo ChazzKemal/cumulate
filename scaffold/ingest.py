@@ -15,7 +15,8 @@ from pathlib import Path
 
 from readers import reader_for, supported
 
-__all__ = ["profile", "load", "describe", "list_sheets", "supported", "UnsupportedFile"]
+__all__ = ["profile", "load", "describe", "formulas", "list_sheets", "supported",
+           "UnsupportedFile"]
 
 
 class UnsupportedFile(Exception):
@@ -45,12 +46,36 @@ def list_sheets(path: str | Path) -> list[str]:
     return r.list_sheets(path) if hasattr(r, "list_sheets") else []
 
 
+def formulas(path: str | Path, limit: int = 40) -> dict:
+    """The calculations inside a spreadsheet, if it has any.
+
+    Loading gives you the numbers; this gives you the rules that made them.
+    Worth reading before rebuilding anything somebody maintained by hand.
+    Empty dict for file types that cannot carry a formula.
+    """
+    r = _reader(path)
+    return r.formulas(path, limit=limit) if hasattr(r, "formulas") else {}
+
+
 def describe(path: str | Path) -> str:
     """The profile as prose — what you read out to someone before asking questions."""
     p = profile(path)
     lines = [f"{p['file']} — {p.get('kind', 'unknown')}"]
 
-    if "sheets" in p:
+    if p.get("kind") == "code":
+        lines[0] = f"{p['file']} — {p['language']}, {p['lines']:,} lines"
+        if p.get("defines"):
+            lines.append(f"  Defines: {', '.join(p['defines'])}")
+        if p.get("constants"):
+            lines.append("  Hardcoded values:")
+            lines.extend(f"    {k} = {v}" for k, v in p["constants"].items())
+        if p.get("thresholds"):
+            lines.append(f"  Compared against: {', '.join(p['thresholds'])}")
+        for note in p.get("flagged", []):
+            lines.append(f"    {note}")
+        for w in p.get("warnings", []):
+            lines.append(f"  ⚠ {w}")
+    elif "sheets" in p:
         for name, s in p["sheets"].items():
             lines.append(f"\n  Sheet '{name}': {s['rows']:,} rows × {len(s['columns'])} columns")
             lines.append(f"    Columns: {', '.join(map(str, s['columns']))}")
