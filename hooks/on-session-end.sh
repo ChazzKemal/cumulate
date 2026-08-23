@@ -1,5 +1,7 @@
 #!/bin/sh
 # Fired by Codex on SessionEnd (arg: end) and SessionStart (arg: start).
+# Only KEEPS the conversation — free, no model call. Summarising is deliberate:
+# run `harvest run` on demand, or `harvest weekly` for committed work.
 # Kicks off knowledge extraction and returns immediately — the hook has a hard
 # timeout and must never make anyone wait.
 #
@@ -30,7 +32,7 @@ printf '\n--- %s (%s%s) ---\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$EVENT" \
 
 # Detach completely: no stdin, output to the log, survives the session closing.
 # `-m harvest` resolves from Harvest's own directory, so run from there.
-( cd "$HARVEST" && nohup "$HARVEST/.venv/bin/python" -u -m harvest run \
+( cd "$HARVEST" && nohup "$HARVEST/.venv/bin/python" -u -m harvest capture \
     --repo "$REPO" ${ENDED:+--ended "$ENDED"} >>"$LOG" 2>&1 </dev/null & )
 
 exit 0
