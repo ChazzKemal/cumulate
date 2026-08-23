@@ -7,8 +7,7 @@ Every session is captured by Entire, linked to the commit it produced.
 
 Double-click **start.command** (macOS) or **start.bat** (Windows). Type what you need.
 
-Give it a file any of three ways: drop it in **inbox/**, drag it onto the window,
-or just say where it is. Finished tools land in **tools/**.
+Give it a file two ways: drop it in **inbox/**, or drag it onto the window. Finished tools land in **tools/**.
 
 ## One-time setup per machine
 

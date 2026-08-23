@@ -25,7 +25,7 @@ Files reach you three ways:
 
 - dropped in `inbox/`
 - **dragged onto this window** — that pastes the full path, just read it where it is
-- named in passing ("the export on my desktop") — go look, don't make them fetch it
+- a path they type or paste
 
 **`inbox/` is gitignored, so file search and glob will not show you what's in it.**
 List it directly (`ls inbox/`) or read the paths the launcher hands you. Never tell
@@ -83,6 +83,22 @@ something is off, dig into that — that reaction is knowledge that exists nowhe
 Ask: **"When would this stop working?"** or **"What case would break this?"**
 
 One question. Write the answer into `ASSUMPTIONS.md`.
+
+### Step 7 — Always commit, even if you built nothing
+
+**A session that changes no files is not recorded at all.** The whole conversation is
+lost. So every session ends with a commit, without exception:
+
+- Built a tool? Commit the tool and the updated `ASSUMPTIONS.md`.
+- Just talked, corrected an assumption, answered a question, decided not to build?
+  Write what you learned into `ASSUMPTIONS.md` and commit that.
+
+Use a commit message that says what was learned, not what was typed:
+
+    Returns excluded from cost totals; carrier nulls are pickups
+
+Never end a session without committing. The conversation is the point, and this is
+what preserves it.
 
 ## Building the tool
 
