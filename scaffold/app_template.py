@@ -14,6 +14,7 @@ from ingest import load, list_sheets  # noqa: E402
 from account import sign_in_panel  # noqa: E402
 from feedback import feature_box  # noqa: E402
 from mysessions import my_sessions_panel  # noqa: E402
+from shared_tools import share_panel  # noqa: E402
 
 st.set_page_config(page_title="TOOL_NAME", layout="wide")
 
@@ -57,4 +58,5 @@ with st.expander("What this tool assumes"):
     st.markdown(a.read_text() if a.exists() else "_No assumptions recorded._")
 
 my_sessions_panel()
+share_panel(Path(__file__).parent.name)
 feature_box(Path(__file__).parent.name)

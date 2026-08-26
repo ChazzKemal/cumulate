@@ -141,6 +141,36 @@ runs in one place — yours:
 That reads everyone's uploaded sessions on your key and writes the claims back
 attributed to whoever did the work. Nobody else ever needs a key for it.
 
+## Sharing a tool
+
+Knowledge already reaches the team. A working tool did not — Karl builds a duty
+calculator, and the next person to need one builds a second, with its own
+assumptions quietly disagreeing with his.
+
+So a tool goes to the same store, through the sign-in that is already there. No
+second account, no GitHub, no keys. Open a tool, **Share with your team**,
+Publish. It appears on everyone else's launcher next time they start, and the
+agent offers it before building anything similar.
+
+Two things it deliberately does not do:
+
+- **Nothing publishes itself.** Same rule as never committing unless asked. What
+  goes out carries someone's assumptions with their name on it.
+- **Nothing is overwritten.** Fetching a colleague's `shipment-cost` when you have
+  your own puts theirs in its own folder. Yours has your corrections in it.
+
+Their assumptions arrive with the tool, and the agent is told to go through them
+line by line rather than adopt them. Karl's rules came from Karl's customers.
+Being in a file does not make them true for you — and the line you correct is
+worth more than the tool was.
+
+One-time, on the store:
+
+    psql "$SUPABASE_DB_URL" -f supabase/schema.sql
+
+That is Harvest's schema file, and it is idempotent. Until it is applied, the
+Share panel is the only thing that notices — everything else carries on.
+
 ## Reading the captured knowledge
 
     entire session list              # sessions

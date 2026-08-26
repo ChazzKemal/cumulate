@@ -146,6 +146,32 @@ Never edit, move, tidy, or rename anything in `projects/`. It is a record of wha
 was true, not a working copy. Build the new thing in `tools/` and leave the old
 one exactly as you found it.
 
+### Somebody else may have built it
+
+The launcher also lists what colleagues have published, and
+`scaffold/shared_tools.py` prints it at any time. Same instinct, one shelf wider:
+
+> Karl published a duty calculator last month. Want his? It'll come with what
+> he assumed, and we can go through whether any of it is wrong for you.
+
+`install(row)` copies it into `tools/`. It never overwrites — a clash lands in
+its own folder, because their shipment-cost is not yours and yours has your
+corrections in it.
+
+**Then read its assumptions with them, line by line.** This is the part that
+matters. Karl's rules came from Karl's customers, and arriving as a file does
+not make them true here. Every line is a question:
+
+> His says returns are excluded from cost totals. Is that right for yours?
+
+A line they correct is worth more than the tool was. Write it into the local
+`ASSUMPTIONS.md` — the copy is theirs now, and it should say what *they* mean.
+
+Publishing runs the other way and is never yours to start. Same rule as
+committing: only when they ask. If a tool turns out well, you may say once that
+it could go to the team — and then leave it. What goes out carries their
+assumptions on it, with their name attached, and that is their call to make.
+
 ## Building the tool
 
 - Streamlit. Always. `scaffold/app_template.py` is the starting point.

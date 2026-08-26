@@ -35,3 +35,29 @@ If a line here is wrong, say so — that correction is the point.
 that is knowledge nobody wrote down, held in files that are still in use.
 
 **Breaks when:** _(not yet asked)_
+
+## shared tools — 2026-08-24
+
+- [open] A tool worth having is worth the whole team having. Right now knowledge
+  reaches everyone and a working tool reaches nobody.
+- [open] Sharing goes through the Google sign-in that already exists. No GitHub
+  account, no git, no keys — adding a second account would undo the one-click setup.
+- [open] `shared_tools` is the one table in the store readable by everyone. Safe
+  because a row is something a person MADE and published on purpose, not a record
+  OF them — unlike sessions, chats and corrections.
+- [open] Publishing is deliberate and never automatic, same rule as committing.
+  It sends the tool and its assumptions, which can name rates and customers, so
+  the author sees exactly what will go before it goes.
+- [open] Publishing is append-only. A fix is a new version; old ones stay readable
+  so "what did it assume when I used it in March" has an answer.
+- [open] Fetching never overwrites a tool of the same name. Someone else's
+  shipment-cost is not yours — yours has your corrections in it.
+- [open] Someone else's assumptions are not automatically true for you. The agent
+  reads them with you line by line rather than adopting them.
+- [open] Author names travel with a tool; email addresses do not.
+
+**Why it matters:** Two people solving the same problem twice, with rules that
+quietly disagree, is the exact split the agent is told to avoid — and until now
+it could only ever see one person's shelf.
+
+**Breaks when:** _(not yet asked)_
