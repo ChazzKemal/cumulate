@@ -68,11 +68,17 @@ def _fix_entire_hooks(events: dict) -> bool:
 
 def main() -> int:
     f = ROOT / ".codex" / "hooks.json"
-    if not f.exists():
-        print("Session recording isn't set up yet.")
-        return 1
-
-    cfg = json.loads(f.read_text())
+    # The file is written by the recorder when it is enabled, and it holds
+    # absolute paths, so it belongs to the machine and is never committed.
+    # Write our own when the recorder is not there: capture must still happen.
+    if f.exists():
+        try:
+            cfg = json.loads(f.read_text())
+        except ValueError:
+            cfg = {}
+    else:
+        f.parent.mkdir(parents=True, exist_ok=True)
+        cfg = {}
     hook = APP / "hooks" / "on_session_end.py"
     events = cfg.setdefault("hooks", {})
 

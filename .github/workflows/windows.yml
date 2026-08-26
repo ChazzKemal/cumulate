@@ -1,0 +1,136 @@
+# Windows is the platform nobody here runs day to day, so it is the one that
+# breaks quietly. This exercises the launcher on a real Windows machine on every
+# change to it.
+#
+# What it cannot cover: double-clicking from Explorer, the browser sign-in, and
+# OneDrive paths. Those still need a real desktop.
+name: Windows launcher
+
+on:
+  push:
+    paths:
+      - '**.bat'
+      - 'scaffold/**'
+      - 'hooks/**'
+      - '.github/workflows/windows.yml'
+  pull_request:
+  workflow_dispatch:
+
+env:
+  CI: 1
+
+jobs:
+  bootstrap:
+    name: Fresh machine
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      # The real thing, with nothing pre-installed by us: uv, the virtual
+      # environment, the dependencies, the assistant, the recorder.
+      - name: Run bootstrap.bat
+        shell: cmd
+        run: call scaffold\bootstrap.bat
+
+      - name: It produced a working environment
+        shell: cmd
+        run: |
+          if not exist ".venv\Scripts\python.exe" (echo MISSING: python & exit /b 1)
+          .venv\Scripts\python.exe -c "import streamlit, pandas" || exit /b 1
+          where codex >nul 2>&1 || (echo MISSING: codex & exit /b 1)
+          echo OK
+
+      # Not fatal by design - a missing recorder must never stop someone
+      # working - so this reports rather than fails.
+      - name: Did session recording install?
+        continue-on-error: true
+        shell: cmd
+        run: |
+          where entire >nul 2>&1 && (echo recorder: yes) || (echo recorder: NO)
+
+      # This must work whether or not the recorder is there. It is the part
+      # that was silently skipped on Windows.
+      - name: Capture hooks are installed regardless
+        shell: cmd
+        run: |
+          if not exist ".codex\hooks.json" (echo MISSING: hooks.json & exit /b 1)
+          .venv\Scripts\python.exe -c "import json,sys; c=json.load(open('.codex/hooks.json')); h=[x['command'] for e in ('SessionEnd','SessionStart') for g in c['hooks'][e] for x in g['hooks']]; sys.exit(0 if sum('on_session_end' in x for x in h)==2 else 1)" || exit /b 1
+          echo OK
+
+  launcher:
+    name: Launcher end to end
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      # Stand in for the assistant, so the launcher runs to completion and we
+      # can read back what it built. Also answers the two login calls.
+      - name: Stub the assistant
+        shell: pwsh
+        run: |
+          $stub = "$env:RUNNER_TEMP\stub"
+          New-Item -ItemType Directory -Force -Path $stub | Out-Null
+          @'
+          @echo off
+          if "%~1"=="login" (
+            if "%~2"=="status" (
+              if exist "%RUNNER_TEMP%\loggedin" (echo Logged in using an API key) else (echo Not logged in)
+              exit /b 0
+            )
+            echo yes> "%RUNNER_TEMP%\loggedin"
+            exit /b 0
+          )
+          rem Inherited from the launcher, so it proves config.env was loaded.
+          echo %SUPABASE_URL%> "%RUNNER_TEMP%\supabase.txt"
+          echo %*> "%RUNNER_TEMP%\prompt.txt"
+          '@ | Set-Content -Path "$stub\codex.cmd" -Encoding ascii
+          # Stub the recorder too. The bootstrap job installs it for real; here
+          # it would only cost minutes we do not have on a free runner.
+          "@echo off`r`nexit /b 0" | Set-Content -Path "$stub\entire.cmd" -Encoding ascii
+          Add-Content -Path $env:GITHUB_PATH -Value $stub
+
+      # Pre-seed what the welcome page would have written. Without both of
+      # these the launcher opens a browser and waits ten minutes.
+      - name: Pretend setup already happened
+        shell: cmd
+        run: |
+          echo OPENAI_API_KEY=sk-not-a-real-key> .env
+          mkdir "%USERPROFILE%\.cumulate" 2>nul
+          echo {}> "%USERPROFILE%\.cumulate\session.json"
+          echo some-data> inbox\example.csv
+
+      - name: Run start.bat
+        shell: cmd
+        run: call start.bat
+
+      # The prompt is what the whole launcher exists to build. If the file
+      # listing or an index script broke, it shows up here and nowhere else.
+      - name: The prompt was built correctly
+        shell: cmd
+        run: |
+          if not exist "%RUNNER_TEMP%\prompt.txt" (echo the assistant was never reached & exit /b 1)
+          type "%RUNNER_TEMP%\prompt.txt"
+          findstr /c:"Tool Builder" "%RUNNER_TEMP%\prompt.txt" >nul || (echo MISSING: instructions & exit /b 1)
+          findstr /c:"inbox/example.csv" "%RUNNER_TEMP%\prompt.txt" >nul || (echo MISSING: the inbox file & exit /b 1)
+          echo OK
+
+      # The key alone does not authenticate the assistant; it has to be handed
+      # over explicitly. This is the step that was missing entirely.
+      - name: The key was handed over
+        shell: cmd
+        run: |
+          if not exist "%RUNNER_TEMP%\loggedin" (echo the key was never handed over & exit /b 1)
+          echo OK
+
+      # config.env was never read on Windows at all, so the shared store was
+      # unreachable. The assistant inherits the launcher's environment, so what
+      # the stub saw is what the launcher had.
+      - name: Shared settings reached the assistant
+        shell: cmd
+        run: |
+          if not exist "%RUNNER_TEMP%\supabase.txt" (echo nothing recorded & exit /b 1)
+          type "%RUNNER_TEMP%\supabase.txt"
+          findstr /c:"supabase.co" "%RUNNER_TEMP%\supabase.txt" >nul || (echo MISSING: config.env was not loaded & exit /b 1)
+          echo OK

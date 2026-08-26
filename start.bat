@@ -10,6 +10,12 @@ if not defined CUMULATE_WORKSPACE set "CUMULATE_WORKSPACE=%CUMULATE_APP%"
 set "APP=%CUMULATE_APP%"
 cd /d "%CUMULATE_WORKSPACE%"
 
+rem The console is code page 850 by default and mangles anything that is not
+rem plain ASCII, including the dashes in the tools list.
+chcp 65001 >nul 2>&1
+set "PYTHONUTF8=1"
+set "PYTHONIOENCODING=utf-8"
+
 rem Fresh machine? Get everything in place first.
 call "%APP%\scaffold\bootstrap.bat"
 if errorlevel 1 exit /b 1
@@ -57,13 +63,20 @@ if !WAITED! LSS 600 goto waitkey
 
 if defined WELCOME_PID taskkill /f /pid !WELCOME_PID! >nul 2>&1
 echo   Setup didn't finish. Run this again when you're ready.
-pause
+if not defined CI pause
 exit /b 1
 
 :gotkey
 if defined WELCOME_PID taskkill /f /pid !WELCOME_PID! >nul 2>&1
 
 :ready
+set "PY=%APP%\.venv\Scripts\python.exe"
+if not exist "%PY%" set "PY=python"
+
+rem The key on its own does nothing until it is handed over explicitly; without
+rem this someone would be asked to sign in right after being told they were done.
+"%PY%" "%APP%\scaffold\codex_login.py" >nul 2>&1
+
 rem inbox\ is gitignored, so file search can't see it. List it explicitly.
 set "FILES="
 for %%f in (inbox\*) do (
@@ -72,17 +85,19 @@ for %%f in (inbox\*) do (
   )
 )
 
-set "PY=%APP%\.venv\Scripts\python.exe"
-if not exist "%PY%" set "PY=python"
 for /f "delims=" %%i in ('""%PY%" "%APP%\scaffold\tools_index.py" --prompt 2^>nul"') do set "TOOLS_PROMPT=%%i"
 rem projects\ is gitignored too, for the same reason inbox\ is. Same fix.
 rem A blank line is skipped by for /f, so an empty archive leaves this undefined.
 for /f "delims=" %%i in ('""%PY%" "%APP%\scaffold\projects_index.py" --prompt 2^>nul"') do set "PROJECTS_PROMPT=%%i"
+rem What colleagues have published. Gives up quickly and says nothing when
+rem nobody is signed in, so this cannot be what makes the launcher hang.
+for /f "delims=" %%i in ('""%PY%" "%APP%\scaffold\shared_tools.py" --prompt 2^>nul"') do set "SHARED_PROMPT=%%i"
 
 set "PROMPT=You are in the Tool Builder project. Follow AGENTS.md."
 if defined FILES set "PROMPT=!PROMPT! Files sitting in the inbox: !FILES! (gitignored, so file search will not find them - read them by path when the time comes)."
 if defined TOOLS_PROMPT set "PROMPT=!PROMPT! !TOOLS_PROMPT!"
 if defined PROJECTS_PROMPT set "PROMPT=!PROMPT! !PROJECTS_PROMPT!"
+if defined SHARED_PROMPT set "PROMPT=!PROMPT! !SHARED_PROMPT!"
 set "PROMPT=!PROMPT! Greet me in one line, say what is in the inbox if anything, and ask what I need. Do not open, read or profile any file yet - wait until I have told you what I want."
 
 cls
@@ -95,6 +110,16 @@ echo   Work you did before this existed:
 echo.
 "%PY%" "%APP%\scaffold\projects_index.py"
 echo.
+rem Written out once and measured, rather than run twice: the header should not
+rem appear above nothing, and one lookup is enough.
+"%PY%" "%APP%\scaffold\shared_tools.py" > "%TEMP%\cumulate_shared.txt" 2>nul
+for %%A in ("%TEMP%\cumulate_shared.txt") do if %%~zA GTR 2 (
+  echo   Your colleagues have built:
+  echo.
+  type "%TEMP%\cumulate_shared.txt"
+  echo.
+)
+del "%TEMP%\cumulate_shared.txt" >nul 2>&1
 echo   Drag a file onto this window, or drop it in the inbox folder.
 echo.
 

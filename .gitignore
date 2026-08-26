@@ -11,3 +11,6 @@ inbox/*
 !inbox/.gitkeep
 projects/*
 !projects/README.md
+
+# Written by the recorder on each machine and full of absolute paths.
+.codex/hooks.json

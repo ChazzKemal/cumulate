@@ -31,7 +31,7 @@ set "PATH=%USERPROFILE%\.local\bin;%PATH%"
 where uv >nul 2>&1
 if errorlevel 1 (
   echo   Couldn't finish setup. Check your internet connection and try again.
-  pause
+  if not defined CI pause
   exit /b 1
 )
 
@@ -79,7 +79,7 @@ where codex >nul 2>&1
 if not errorlevel 1 goto codexok
 echo   The assistant could not be installed automatically.
 echo   Check your internet connection and try again.
-pause
+if not defined CI pause
 exit /b 1
 :codexok
 
@@ -121,6 +121,8 @@ if errorlevel 1 (
 ) else (
   if not exist ".entire\settings.json" entire enable --agent codex >nul 2>&1
 )
-rem The capture hook is plain Python - install it whether or not entire made it.
-if exist ".codex\hooks.json" "%CUMULATE_APP%\.venv\Scripts\python.exe" "%CUMULATE_APP%\scaffold\install_hooks.py" >nul 2>&1
+rem The capture hook is plain Python - install it whether or not entire made it,
+rem and whether or not a hooks file exists yet: it writes one when entire did not.
+rem Gating it on the file is what left a machine without entire recording nothing.
+"%CUMULATE_APP%\.venv\Scripts\python.exe" "%CUMULATE_APP%\scaffold\install_hooks.py" >nul 2>&1
 exit /b 0

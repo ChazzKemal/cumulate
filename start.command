@@ -57,6 +57,10 @@ if [ -n "$NEEDS_SETUP" ]; then
   clear
 fi
 
+# The key on its own does nothing until it is handed over explicitly; without
+# this someone would be asked to sign in right after being told they were done.
+"$APP/.venv/bin/python" "$APP/scaffold/codex_login.py" >/dev/null 2>&1 || true
+
 # inbox/ is gitignored, so file search can't see it. List it explicitly
 # and hand the names to the agent so it can never miss them.
 FILES=$(find inbox -maxdepth 1 -type f ! -name '.*' -exec basename {} \; 2>/dev/null \
@@ -69,12 +73,17 @@ TOOLS_PROMPT=$("$PY" "$APP/scaffold/tools_index.py" --prompt 2>/dev/null)
 # projects/ is gitignored too, for the same reason inbox/ is. Same fix.
 PROJECTS_HUMAN=$("$PY" "$APP/scaffold/projects_index.py" 2>/dev/null)
 PROJECTS_PROMPT=$("$PY" "$APP/scaffold/projects_index.py" --prompt 2>/dev/null)
+# What colleagues have published. Reads the shared store, gives up quickly, and
+# prints nothing at all when nobody is signed in or the network is having a day.
+SHARED_HUMAN=$("$PY" "$APP/scaffold/shared_tools.py" 2>/dev/null)
+SHARED_PROMPT=$("$PY" "$APP/scaffold/shared_tools.py" --prompt 2>/dev/null)
 
 PROMPT="You are in the Tool Builder project. Follow AGENTS.md."
 [ -n "$FILES" ] && PROMPT="$PROMPT Files sitting in the inbox: ${FILES} (gitignored, so
 file search will not find them — read them by path when the time comes)."
 [ -n "$TOOLS_PROMPT" ] && PROMPT="$PROMPT ${TOOLS_PROMPT}"
 [ -n "$PROJECTS_PROMPT" ] && PROMPT="$PROMPT ${PROJECTS_PROMPT}"
+[ -n "$SHARED_PROMPT" ] && PROMPT="$PROMPT ${SHARED_PROMPT}"
 PROMPT="$PROMPT Greet me in one line, say what is in the inbox if anything, and ask what
 I need. Do not open, read or profile any file yet — wait until I have told you what I
 want."
@@ -89,6 +98,12 @@ echo "  Work you did before this existed:"
 echo
 echo "${PROJECTS_HUMAN}"
 echo
+if [ -n "$SHARED_HUMAN" ]; then
+  echo "  Your colleagues have built:"
+  echo
+  echo "${SHARED_HUMAN}"
+  echo
+fi
 echo "  Drag a file onto this window, or drop it in the inbox folder."
 echo
 read -r -p "  Press return to begin."
