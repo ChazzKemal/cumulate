@@ -24,14 +24,13 @@ if exist ".env" (
   for /f "usebackq eol=# tokens=1,* delims==" %%a in ("%APP%\.env") do set "%%a=%%b"
 )
 
-rem Someone needs setting up if they have no key, or no account yet. The second
-rem case matters for anyone who already had a key: without it they would never
-rem be asked to sign in, and their work could never reach the shared store.
+rem Someone needs setting up only if they have no key. Signing in is how a key
+rem is issued, so a key already in .env means they are ready - never send them
+rem back through the browser for it.
 rem Labels cannot live inside a parenthesised block in batch, so this whole
 rem stretch runs at top level.
 set "NEEDS_SETUP="
 if "!OPENAI_API_KEY!"=="" set "NEEDS_SETUP=1"
-if not "!SUPABASE_URL!"=="" if not exist "%USERPROFILE%\.cumulate\session.json" set "NEEDS_SETUP=1"
 if not defined NEEDS_SETUP goto ready
 
 echo.
@@ -53,7 +52,6 @@ if exist .env for /f "usebackq eol=# tokens=1,* delims==" %%a in (".env") do set
 rem Delayed expansion: %VAR% would be fixed at parse time and never see the key.
 set "NEEDS_SETUP="
 if "!OPENAI_API_KEY!"=="" set "NEEDS_SETUP=1"
-if not "!SUPABASE_URL!"=="" if not exist "%USERPROFILE%\.cumulate\session.json" set "NEEDS_SETUP=1"
 if not defined NEEDS_SETUP goto gotkey
 if !WAITED! LSS 600 goto waitkey
 
