@@ -90,6 +90,11 @@ must never stop someone getting their work done.
 
 Codex will ask once whether to trust this folder. Click yes.
 
+Sending it to someone: `./make-installer.sh <token> you/cumulate you/harvest`
+makes the macOS installer, and the same with `windows` on the end makes
+`install-cumulate.cmd` for Windows. Both are double-clickable, both are
+per-user, and neither needs admin rights anywhere.
+
 ## What's here
 
 | Path | What it is |
