@@ -10,6 +10,7 @@ to them, so there is no account to create at OpenAI and nothing to paste.
 from __future__ import annotations
 
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -25,6 +26,11 @@ load_settings()
 ENV = WORKSPACE / ".env"
 
 st.set_page_config(page_title="Welcome", page_icon="👋")
+
+
+def _has_key(text: str) -> bool:
+    """An actual assignment, not the commented example the template ships."""
+    return bool(re.search(r"^\s*OPENAI_API_KEY=", text, re.M))
 
 
 def _save_key(key: str) -> None:
@@ -87,7 +93,7 @@ if not user:
 st.write(f"Hello {user['name'].split()[0] if user['name'] else 'there'}.")
 
 # Signed in and already holding a key: nothing left to do.
-if os.environ.get("OPENAI_API_KEY") or (ENV.exists() and "OPENAI_API_KEY=" in ENV.read_text()):
+if os.environ.get("OPENAI_API_KEY") or (ENV.exists() and _has_key(ENV.read_text())):
     st.success("You're all set. Close this tab and you're away.")
     st.stop()
 
