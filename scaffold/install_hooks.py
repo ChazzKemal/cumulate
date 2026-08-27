@@ -35,9 +35,16 @@ def main() -> int:
         arg = "end" if event == "SessionEnd" else "start"
         command = f'"{sys.executable}" "{hook}" {arg}'
         group = events.setdefault(event, [{"matcher": None, "hooks": []}])
-        if any("on_session_end" in h.get("command", "") or "on-session-end" in h.get("command", "")
+        if any(h.get("command") == command
                for g in group for h in g.get("hooks", [])):
             continue
+        # A capture entry pointing anywhere else is from another machine or an
+        # old install — its interpreter does not exist here, so it never fires.
+        # Replace it rather than treating it as already installed.
+        for g in group:
+            g["hooks"] = [h for h in g.get("hooks", [])
+                          if "on_session_end" not in h.get("command", "")
+                          and "on-session-end" not in h.get("command", "")]
         group[0].setdefault("hooks", []).append(
             {"type": "command", "command": command, "timeout": 5})
         added.append(event)
