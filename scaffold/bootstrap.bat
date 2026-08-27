@@ -43,6 +43,16 @@ if not exist ".venv\Scripts\python.exe" (
 rem Dependencies change as tools grow; keep them current without a visible step.
 uv pip install -q -r requirements.txt >nul 2>&1
 
+rem Harvest keeps its own venv - the viewer and capture both need it.
+if not defined HARVEST_DIR goto harvestdone
+if not exist "%HARVEST_DIR%\requirements.txt" goto harvestdone
+if exist "%HARVEST_DIR%\.venv\Scripts\python.exe" goto harvestdone
+pushd "%HARVEST_DIR%"
+uv venv --python 3.12 >nul 2>&1
+uv pip install -q -r requirements.txt >nul 2>&1
+popd
+:harvestdone
+
 rem --- the assistant ---------------------------------------------------------
 rem npm when the machine has it; otherwise the release binary, which needs no
 rem package manager, no PATH changes that outlive this window, and no admin.
@@ -94,9 +104,13 @@ call scoop bucket add entire https://github.com/entireio/scoop-bucket.git >nul 2
 call scoop install entire/cli >nul 2>&1
 :entiredone
 
-where entire >nul 2>&1
-if errorlevel 1 exit /b 0
 cd /d "%CUMULATE_WORKSPACE%"
-if not exist ".entire\settings.json" entire enable --agent codex >nul 2>&1
+where entire >nul 2>&1
+if errorlevel 1 (
+  echo   Session recording is not available on this machine. Carrying on.
+) else (
+  if not exist ".entire\settings.json" entire enable --agent codex >nul 2>&1
+)
+rem The capture hook is plain Python - install it whether or not entire made it.
 if exist ".codex\hooks.json" "%CUMULATE_APP%\.venv\Scripts\python.exe" "%CUMULATE_APP%\scaffold\install_hooks.py" >nul 2>&1
 exit /b 0

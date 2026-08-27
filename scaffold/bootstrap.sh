@@ -79,5 +79,6 @@ fi
 
 if command -v entire >/dev/null 2>&1; then
   [ -f "$WORKSPACE/.entire/settings.json" ] || (cd "$WORKSPACE" && entire enable --agent codex) >/dev/null 2>&1 || true
-  [ -f "$WORKSPACE/.codex/hooks.json" ] && (cd "$WORKSPACE" && "$ROOT/.venv/bin/python" "$ROOT/scaffold/install_hooks.py") >/dev/null 2>&1 || true
 fi
+# The capture hook is plain Python — install it whether or not entire made it.
+[ -f "$WORKSPACE/.codex/hooks.json" ] && (cd "$WORKSPACE" && "$ROOT/.venv/bin/python" "$ROOT/scaffold/install_hooks.py") >/dev/null 2>&1 || true

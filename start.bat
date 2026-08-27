@@ -36,11 +36,14 @@ if not defined NEEDS_SETUP goto ready
 
 echo.
 echo   Opening your browser to get you set up...
+echo   If nothing opens, go to http://localhost:8501 yourself.
 echo.
 rem Keep the welcome page's PID, so only it is closed later - never every
-rem Streamlit the person happens to have running.
+rem Streamlit the person happens to have running. headless false is what
+rem makes Streamlit open the browser itself.
 set "WELCOME_PID="
-for /f %%p in ('powershell -NoProfile -Command "(Start-Process -FilePath '%APP%\.venv\Scripts\streamlit.exe' -ArgumentList 'run','%APP%\scaffold\welcome.py','--server.port','8501' -WindowStyle Hidden -PassThru).Id"') do set "WELCOME_PID=%%p"
+for /f %%p in ('powershell -NoProfile -Command "(Start-Process -FilePath '%APP%\.venv\Scripts\streamlit.exe' -ArgumentList 'run','%APP%\scaffold\welcome.py','--server.headless','false','--server.port','8501' -WindowStyle Hidden -PassThru).Id"') do set "WELCOME_PID=%%p"
+if not defined WELCOME_PID start "" http://localhost:8501
 set /a WAITED=0
 
 :waitkey
