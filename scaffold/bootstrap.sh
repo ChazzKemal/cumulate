@@ -51,9 +51,11 @@ if ! command -v codex >/dev/null 2>&1; then
   say "Installing the assistant. This can take a few minutes on a first"
   say "run — the window is not frozen, it is downloading…"
   if command -v npm >/dev/null 2>&1; then
-    npm install -g @openai/codex >/dev/null 2>&1 || true
-  elif command -v brew >/dev/null 2>&1; then
-    brew install codex >/dev/null 2>&1 || true
+    npm install -g @openai/codex || true
+  fi
+  if ! command -v codex >/dev/null 2>&1 && command -v brew >/dev/null 2>&1; then
+    say "That route didn't work — trying another one…"
+    brew install codex || true
   fi
 fi
 if command -v codex >/dev/null 2>&1; then

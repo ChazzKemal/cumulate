@@ -67,9 +67,10 @@ echo   Installing the assistant. This can take a few minutes on a first
 echo   run - the window is not frozen, it is downloading...
 where npm >nul 2>&1
 if errorlevel 1 goto codexbinary
-npm install -g @openai/codex >nul 2>&1
+call npm install -g @openai/codex
 where codex >nul 2>&1
 if not errorlevel 1 goto codexinstalled
+echo   That route didn't work - trying a direct download instead...
 
 :codexbinary
 if not exist "%CUMULATE_BIN%" mkdir "%CUMULATE_BIN%" >nul 2>&1
