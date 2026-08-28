@@ -7,6 +7,8 @@ fired on a Windows machine.
 from __future__ import annotations
 
 import json
+import re
+import shutil
 import sys
 from pathlib import Path
 
@@ -15,6 +17,53 @@ import os
 # The hook lives with the code; it is installed into the person's workspace.
 APP = Path(os.environ.get("CUMULATE_APP") or Path(__file__).resolve().parent.parent)
 ROOT = Path(os.environ.get("CUMULATE_WORKSPACE") or APP)
+
+
+def _cmd_path(p: Path) -> str:
+    """A path usable inside a Codex hook command on this OS.
+
+    Codex's Windows hook runner passes commands through `cmd.exe /C "..."`,
+    whose quote stripping mangles any command that quotes its executable —
+    the hook then fails before running anything. Paths must therefore go in
+    unquoted; when one contains a space, its 8.3 short form is used instead.
+    """
+    if os.name != "nt":
+        return f'"{p}"'
+    s = str(p)
+    if " " not in s:
+        return s
+    import ctypes
+
+    buf = ctypes.create_unicode_buffer(260)
+    if ctypes.windll.kernel32.GetShortPathNameW(s, buf, 260):
+        return buf.value
+    return s
+
+
+def _fix_entire_hooks(events: dict) -> bool:
+    """Rewrite entire's `sh -c ...` hooks into a form Windows can run.
+
+    `entire enable` emits POSIX shell wrappers; cmd.exe has no `sh`, so on
+    Windows every one of them fails. The wrapper only guards against a
+    missing binary, so replace it with a direct call to the entire that is
+    installed right now.
+    """
+    if os.name != "nt":
+        return False
+    entire = shutil.which("entire")
+    if not entire:
+        return False
+    exe = _cmd_path(Path(entire))
+    changed = False
+    for group in events.values():
+        for g in group:
+            for h in g.get("hooks", []):
+                cmd = h.get("command", "")
+                m = re.search(r"entire hooks ([\w-]+(?: [\w-]+)*)", cmd)
+                if cmd.startswith("sh -c") and "entire hooks" in cmd and m:
+                    h["command"] = f"{exe} hooks {m.group(1)}"
+                    changed = True
+    return changed
 
 
 def main() -> int:
@@ -33,7 +82,7 @@ def main() -> int:
     added = []
     for event in ("SessionEnd", "SessionStart"):
         arg = "end" if event == "SessionEnd" else "start"
-        command = f'"{sys.executable}" "{hook}" {arg}'
+        command = f"{_cmd_path(Path(sys.executable))} {_cmd_path(hook)} {arg}"
         group = events.setdefault(event, [{"matcher": None, "hooks": []}])
         if any(h.get("command") == command
                for g in group for h in g.get("hooks", [])):
@@ -49,12 +98,17 @@ def main() -> int:
             {"type": "command", "command": command, "timeout": 5})
         added.append(event)
 
-    if not added:
+    fixed_entire = _fix_entire_hooks(events)
+
+    if not added and not fixed_entire:
         print("Already installed on SessionEnd and SessionStart.")
         return 0
 
     f.write_text(json.dumps(cfg, indent=2) + "\n")
-    print("Installed capture trigger on " + " and ".join(added) + ".")
+    if added:
+        print("Installed capture trigger on " + " and ".join(added) + ".")
+    if fixed_entire:
+        print("Adapted entire's hooks for Windows.")
     return 0
 
 

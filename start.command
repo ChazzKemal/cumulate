@@ -20,12 +20,11 @@ elif [ -f "$APP/.env" ]; then
   set -a; . "$APP/.env"; set +a
 fi
 
-# Someone needs setting up if they have no key, or no account yet. The second
-# case matters for anyone who already had a key: without it they would never be
-# asked to sign in, and their work could never reach the shared store.
+# Someone needs setting up only if they have no key. Signing in is how a key
+# is issued, so a key already in .env means they are ready — never send them
+# back through the browser for it.
 NEEDS_SETUP=""
 [ -z "$OPENAI_API_KEY" ] && NEEDS_SETUP=1
-[ -n "$SUPABASE_URL" ] && [ ! -f "$HOME/.cumulate/session.json" ] && NEEDS_SETUP=1
 
 if [ -n "$NEEDS_SETUP" ]; then
   # No key yet: open the welcome page and wait. Signing in there writes the key
@@ -45,7 +44,6 @@ if [ -n "$NEEDS_SETUP" ]; then
     [ -f .env ] && { set -a; . ./.env; set +a; }
     NEEDS_SETUP=""
     [ -z "$OPENAI_API_KEY" ] && NEEDS_SETUP=1
-    [ -n "$SUPABASE_URL" ] && [ ! -f "$HOME/.cumulate/session.json" ] && NEEDS_SETUP=1
   done
   pkill -f "scaffold/welcome.py" >/dev/null 2>&1
   if [ -n "$NEEDS_SETUP" ]; then

@@ -43,6 +43,16 @@ if not exist ".venv\Scripts\python.exe" (
 rem Dependencies change as tools grow; keep them current without a visible step.
 uv pip install -q -r requirements.txt >nul 2>&1
 
+rem Harvest keeps its own venv - the viewer and capture both need it.
+if not defined HARVEST_DIR goto harvestdone
+if not exist "%HARVEST_DIR%\requirements.txt" goto harvestdone
+if exist "%HARVEST_DIR%\.venv\Scripts\python.exe" goto harvestdone
+pushd "%HARVEST_DIR%"
+uv venv --python 3.12 >nul 2>&1
+uv pip install -q -r requirements.txt >nul 2>&1
+popd
+:harvestdone
+
 rem --- the assistant ---------------------------------------------------------
 rem npm when the machine has it; otherwise the release binary, which needs no
 rem package manager, no PATH changes that outlive this window, and no admin.
@@ -62,7 +72,7 @@ if not errorlevel 1 goto codexok
 if not exist "%CUMULATE_BIN%" mkdir "%CUMULATE_BIN%" >nul 2>&1
 set "CODEX_ARCH=x86_64"
 if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "CODEX_ARCH=aarch64"
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-WebRequest -Uri 'https://github.com/openai/codex/releases/latest/download/codex-%CODEX_ARCH%-pc-windows-msvc.exe' -OutFile '%CUMULATE_BIN%\codex.exe'" >nul 2>&1
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference='SilentlyContinue'; Invoke-WebRequest -Uri 'https://github.com/openai/codex/releases/latest/download/codex-%CODEX_ARCH%-pc-windows-msvc.exe' -OutFile '%CUMULATE_BIN%\codex.exe'" >nul 2>&1
 set "PATH=%CUMULATE_BIN%;%PATH%"
 
 where codex >nul 2>&1
@@ -75,9 +85,10 @@ exit /b 1
 
 rem --- session recording ------------------------------------------------------
 rem Without this nothing is captured, so "My sessions" stays empty. Scoop is the
-rem only documented route on Windows; it is per-user by design, so install it
-rem too when it is missing. If any of this fails, carry on - a missing recorder
-rem must never stop someone getting their work done.
+rem documented route on Windows, but it refuses some accounts (administrators),
+rem so fall back to the release zip - per-user, no package manager, like codex.
+rem If any of this fails, carry on - a missing recorder must never stop someone
+rem getting their work done.
 set "PATH=%USERPROFILE%\scoop\shims;%PATH%"
 where entire >nul 2>&1
 if not errorlevel 1 goto entiredone
@@ -87,16 +98,29 @@ where scoop >nul 2>&1
 if not errorlevel 1 goto haveScoop
 powershell -NoProfile -ExecutionPolicy Bypass -Command "irm get.scoop.sh | iex" >nul 2>&1
 where scoop >nul 2>&1
-if errorlevel 1 goto entiredone
+if errorlevel 1 goto entirebinary
 
 :haveScoop
 call scoop bucket add entire https://github.com/entireio/scoop-bucket.git >nul 2>&1
-call scoop install entire/cli >nul 2>&1
+call scoop install entire/entire >nul 2>&1
+where entire >nul 2>&1
+if not errorlevel 1 goto entiredone
+
+:entirebinary
+if not exist "%CUMULATE_BIN%" mkdir "%CUMULATE_BIN%" >nul 2>&1
+set "ENTIRE_ARCH=amd64"
+if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "ENTIRE_ARCH=arm64"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference='SilentlyContinue'; Invoke-WebRequest -Uri 'https://github.com/entireio/cli/releases/latest/download/entire_windows_%ENTIRE_ARCH%.zip' -OutFile \"$env:TEMP\entire.zip\"; Expand-Archive -Force \"$env:TEMP\entire.zip\" \"$env:TEMP\entire_unzip\"; Copy-Item \"$env:TEMP\entire_unzip\entire.exe\",\"$env:TEMP\entire_unzip\git-remote-entire.exe\" '%CUMULATE_BIN%' -Force" >nul 2>&1
+set "PATH=%CUMULATE_BIN%;%PATH%"
 :entiredone
 
-where entire >nul 2>&1
-if errorlevel 1 exit /b 0
 cd /d "%CUMULATE_WORKSPACE%"
-if not exist ".entire\settings.json" entire enable --agent codex >nul 2>&1
+where entire >nul 2>&1
+if errorlevel 1 (
+  echo   Session recording is not available on this machine. Carrying on.
+) else (
+  if not exist ".entire\settings.json" entire enable --agent codex >nul 2>&1
+)
+rem The capture hook is plain Python - install it whether or not entire made it.
 if exist ".codex\hooks.json" "%CUMULATE_APP%\.venv\Scripts\python.exe" "%CUMULATE_APP%\scaffold\install_hooks.py" >nul 2>&1
 exit /b 0

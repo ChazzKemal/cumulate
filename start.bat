@@ -24,23 +24,25 @@ if exist ".env" (
   for /f "usebackq eol=# tokens=1,* delims==" %%a in ("%APP%\.env") do set "%%a=%%b"
 )
 
-rem Someone needs setting up if they have no key, or no account yet. The second
-rem case matters for anyone who already had a key: without it they would never
-rem be asked to sign in, and their work could never reach the shared store.
+rem Someone needs setting up only if they have no key. Signing in is how a key
+rem is issued, so a key already in .env means they are ready - never send them
+rem back through the browser for it.
 rem Labels cannot live inside a parenthesised block in batch, so this whole
 rem stretch runs at top level.
 set "NEEDS_SETUP="
 if "!OPENAI_API_KEY!"=="" set "NEEDS_SETUP=1"
-if not "!SUPABASE_URL!"=="" if not exist "%USERPROFILE%\.cumulate\session.json" set "NEEDS_SETUP=1"
 if not defined NEEDS_SETUP goto ready
 
 echo.
 echo   Opening your browser to get you set up...
+echo   If nothing opens, go to http://localhost:8501 yourself.
 echo.
 rem Keep the welcome page's PID, so only it is closed later - never every
-rem Streamlit the person happens to have running.
+rem Streamlit the person happens to have running. headless false is what
+rem makes Streamlit open the browser itself.
 set "WELCOME_PID="
-for /f %%p in ('powershell -NoProfile -Command "(Start-Process -FilePath '%APP%\.venv\Scripts\streamlit.exe' -ArgumentList 'run','%APP%\scaffold\welcome.py','--server.port','8501' -WindowStyle Hidden -PassThru).Id"') do set "WELCOME_PID=%%p"
+for /f %%p in ('powershell -NoProfile -Command "(Start-Process -FilePath '%APP%\.venv\Scripts\streamlit.exe' -ArgumentList 'run','%APP%\scaffold\welcome.py','--server.headless','false','--server.port','8501' -WindowStyle Hidden -PassThru).Id"') do set "WELCOME_PID=%%p"
+if not defined WELCOME_PID start "" http://localhost:8501
 set /a WAITED=0
 
 :waitkey
@@ -50,7 +52,6 @@ if exist .env for /f "usebackq eol=# tokens=1,* delims==" %%a in (".env") do set
 rem Delayed expansion: %VAR% would be fixed at parse time and never see the key.
 set "NEEDS_SETUP="
 if "!OPENAI_API_KEY!"=="" set "NEEDS_SETUP=1"
-if not "!SUPABASE_URL!"=="" if not exist "%USERPROFILE%\.cumulate\session.json" set "NEEDS_SETUP=1"
 if not defined NEEDS_SETUP goto gotkey
 if !WAITED! LSS 600 goto waitkey
 
@@ -97,4 +98,6 @@ echo.
 echo   Drag a file onto this window, or drop it in the inbox folder.
 echo.
 
-codex "!PROMPT!"
+rem Percent expansion, deliberately: the npm cmd-shim re-parses its arguments,
+rem so a !PROMPT! written here would reach codex as the literal text.
+codex "%PROMPT%"
