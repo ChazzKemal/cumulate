@@ -98,4 +98,6 @@ echo.
 echo   Drag a file onto this window, or drop it in the inbox folder.
 echo.
 
-codex "!PROMPT!"
+rem Percent expansion, deliberately: the npm cmd-shim re-parses its arguments,
+rem so a !PROMPT! written here would reach codex as the literal text.
+codex "%PROMPT%"
