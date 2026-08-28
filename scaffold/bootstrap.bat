@@ -39,6 +39,7 @@ rem --- the workspace's own tools --------------------------------------------
 if not exist ".venv\Scripts\python.exe" (
   echo   Getting things ready. This takes a minute the first time...
   uv venv --python 3.12 >nul 2>&1
+  echo   ...ready.
 )
 rem Dependencies change as tools grow; keep them current without a visible step.
 uv pip install -q -r requirements.txt >nul 2>&1
@@ -47,6 +48,7 @@ rem Harvest keeps its own venv - the viewer and capture both need it.
 if not defined HARVEST_DIR goto harvestdone
 if not exist "%HARVEST_DIR%\requirements.txt" goto harvestdone
 if exist "%HARVEST_DIR%\.venv\Scripts\python.exe" goto harvestdone
+echo   Preparing the session recorder...
 pushd "%HARVEST_DIR%"
 uv venv --python 3.12 >nul 2>&1
 uv pip install -q -r requirements.txt >nul 2>&1
@@ -61,12 +63,13 @@ if exist "%CUMULATE_BIN%\codex.exe" set "PATH=%CUMULATE_BIN%;%PATH%"
 where codex >nul 2>&1
 if not errorlevel 1 goto codexok
 
-echo   Installing the assistant...
+echo   Installing the assistant. This can take a few minutes on a first
+echo   run - the window is not frozen, it is downloading...
 where npm >nul 2>&1
 if errorlevel 1 goto codexbinary
 npm install -g @openai/codex >nul 2>&1
 where codex >nul 2>&1
-if not errorlevel 1 goto codexok
+if not errorlevel 1 goto codexinstalled
 
 :codexbinary
 if not exist "%CUMULATE_BIN%" mkdir "%CUMULATE_BIN%" >nul 2>&1
@@ -76,11 +79,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference='Sil
 set "PATH=%CUMULATE_BIN%;%PATH%"
 
 where codex >nul 2>&1
-if not errorlevel 1 goto codexok
+if not errorlevel 1 goto codexinstalled
 echo   The assistant could not be installed automatically.
 echo   Check your internet connection and try again.
 pause
 exit /b 1
+:codexinstalled
+echo   ...assistant installed.
 :codexok
 
 rem --- session recording ------------------------------------------------------
@@ -93,7 +98,7 @@ set "PATH=%USERPROFILE%\scoop\shims;%PATH%"
 where entire >nul 2>&1
 if not errorlevel 1 goto entiredone
 
-echo   Setting up session recording...
+echo   Setting up session recording ^(another short download^)...
 where scoop >nul 2>&1
 if not errorlevel 1 goto haveScoop
 powershell -NoProfile -ExecutionPolicy Bypass -Command "irm get.scoop.sh | iex" >nul 2>&1
@@ -121,6 +126,7 @@ if errorlevel 1 (
 ) else (
   if not exist ".entire\settings.json" entire enable --agent codex >nul 2>&1
 )
+echo   Setup complete. Opening your workspace...
 rem The capture hook is plain Python - install it whether or not entire made it.
 if exist ".codex\hooks.json" "%CUMULATE_APP%\.venv\Scripts\python.exe" "%CUMULATE_APP%\scaffold\install_hooks.py" >nul 2>&1
 exit /b 0
