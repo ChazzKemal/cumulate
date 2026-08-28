@@ -72,7 +72,7 @@ if not errorlevel 1 goto codexok
 if not exist "%CUMULATE_BIN%" mkdir "%CUMULATE_BIN%" >nul 2>&1
 set "CODEX_ARCH=x86_64"
 if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "CODEX_ARCH=aarch64"
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-WebRequest -Uri 'https://github.com/openai/codex/releases/latest/download/codex-%CODEX_ARCH%-pc-windows-msvc.exe' -OutFile '%CUMULATE_BIN%\codex.exe'" >nul 2>&1
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference='SilentlyContinue'; Invoke-WebRequest -Uri 'https://github.com/openai/codex/releases/latest/download/codex-%CODEX_ARCH%-pc-windows-msvc.exe' -OutFile '%CUMULATE_BIN%\codex.exe'" >nul 2>&1
 set "PATH=%CUMULATE_BIN%;%PATH%"
 
 where codex >nul 2>&1
@@ -110,7 +110,7 @@ if not errorlevel 1 goto entiredone
 if not exist "%CUMULATE_BIN%" mkdir "%CUMULATE_BIN%" >nul 2>&1
 set "ENTIRE_ARCH=amd64"
 if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "ENTIRE_ARCH=arm64"
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-WebRequest -Uri 'https://github.com/entireio/cli/releases/latest/download/entire_windows_%ENTIRE_ARCH%.zip' -OutFile \"$env:TEMP\entire.zip\"; Expand-Archive -Force \"$env:TEMP\entire.zip\" \"$env:TEMP\entire_unzip\"; Copy-Item \"$env:TEMP\entire_unzip\entire.exe\",\"$env:TEMP\entire_unzip\git-remote-entire.exe\" '%CUMULATE_BIN%' -Force" >nul 2>&1
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference='SilentlyContinue'; Invoke-WebRequest -Uri 'https://github.com/entireio/cli/releases/latest/download/entire_windows_%ENTIRE_ARCH%.zip' -OutFile \"$env:TEMP\entire.zip\"; Expand-Archive -Force \"$env:TEMP\entire.zip\" \"$env:TEMP\entire_unzip\"; Copy-Item \"$env:TEMP\entire_unzip\entire.exe\",\"$env:TEMP\entire_unzip\git-remote-entire.exe\" '%CUMULATE_BIN%' -Force" >nul 2>&1
 set "PATH=%CUMULATE_BIN%;%PATH%"
 :entiredone
 
