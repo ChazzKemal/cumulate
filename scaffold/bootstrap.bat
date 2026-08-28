@@ -85,9 +85,10 @@ exit /b 1
 
 rem --- session recording ------------------------------------------------------
 rem Without this nothing is captured, so "My sessions" stays empty. Scoop is the
-rem only documented route on Windows; it is per-user by design, so install it
-rem too when it is missing. If any of this fails, carry on - a missing recorder
-rem must never stop someone getting their work done.
+rem documented route on Windows, but it refuses some accounts (administrators),
+rem so fall back to the release zip - per-user, no package manager, like codex.
+rem If any of this fails, carry on - a missing recorder must never stop someone
+rem getting their work done.
 set "PATH=%USERPROFILE%\scoop\shims;%PATH%"
 where entire >nul 2>&1
 if not errorlevel 1 goto entiredone
@@ -97,11 +98,20 @@ where scoop >nul 2>&1
 if not errorlevel 1 goto haveScoop
 powershell -NoProfile -ExecutionPolicy Bypass -Command "irm get.scoop.sh | iex" >nul 2>&1
 where scoop >nul 2>&1
-if errorlevel 1 goto entiredone
+if errorlevel 1 goto entirebinary
 
 :haveScoop
 call scoop bucket add entire https://github.com/entireio/scoop-bucket.git >nul 2>&1
-call scoop install entire/cli >nul 2>&1
+call scoop install entire/entire >nul 2>&1
+where entire >nul 2>&1
+if not errorlevel 1 goto entiredone
+
+:entirebinary
+if not exist "%CUMULATE_BIN%" mkdir "%CUMULATE_BIN%" >nul 2>&1
+set "ENTIRE_ARCH=amd64"
+if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "ENTIRE_ARCH=arm64"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-WebRequest -Uri 'https://github.com/entireio/cli/releases/latest/download/entire_windows_%ENTIRE_ARCH%.zip' -OutFile \"$env:TEMP\entire.zip\"; Expand-Archive -Force \"$env:TEMP\entire.zip\" \"$env:TEMP\entire_unzip\"; Copy-Item \"$env:TEMP\entire_unzip\entire.exe\",\"$env:TEMP\entire_unzip\git-remote-entire.exe\" '%CUMULATE_BIN%' -Force" >nul 2>&1
+set "PATH=%CUMULATE_BIN%;%PATH%"
 :entiredone
 
 cd /d "%CUMULATE_WORKSPACE%"
