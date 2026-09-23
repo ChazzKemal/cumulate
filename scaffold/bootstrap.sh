@@ -43,6 +43,14 @@ fi
 # Dependencies change as tools grow; keep them current without a visible step.
 uv pip install -q -r requirements.txt >/dev/null 2>&1 || true
 
+# Streamlit asks for an email on its very first run and waits for an answer.
+# The sign-in page runs in the background, so nobody could ever answer and the
+# page would never load. An empty email is Streamlit's own way to skip it.
+if [ ! -f "$HOME/.streamlit/credentials.toml" ]; then
+  mkdir -p "$HOME/.streamlit"
+  printf '[general]\nemail = ""\n' > "$HOME/.streamlit/credentials.toml"
+fi
+
 # --- the assistant -----------------------------------------------------------
 if ! command -v codex >/dev/null 2>&1; then
   say "Installing the assistant…"

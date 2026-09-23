@@ -46,6 +46,14 @@ if not exist ".venv\Scripts\python.exe" (
 rem Dependencies change as tools grow; keep them current without a visible step.
 uv pip install -q -r requirements.txt >nul 2>&1
 
+rem Streamlit asks for an email on its very first run and waits for an answer.
+rem The sign-in page runs in a hidden window, so nobody could ever answer and
+rem the page would never load. An empty email is Streamlit's own way to skip it.
+if not exist "%USERPROFILE%\.streamlit\credentials.toml" (
+  mkdir "%USERPROFILE%\.streamlit" >nul 2>&1
+  > "%USERPROFILE%\.streamlit\credentials.toml" (echo [general]& echo email = "")
+)
+
 rem Harvest keeps its own venv - the viewer and capture both need it.
 if not defined HARVEST_DIR goto harvestdone
 if not exist "%HARVEST_DIR%\requirements.txt" goto harvestdone
