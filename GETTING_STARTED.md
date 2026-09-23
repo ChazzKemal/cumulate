@@ -27,11 +27,19 @@ for your project (the one `config.env` points at).
        supabase functions deploy issue-key
        supabase secrets set FALLBACK_OPENAI_KEY=sk-<your OpenAI key>
 
-4. **Build the installer to send out.** From the cumulate repo, in Git Bash
-   (or any Unix shell):
+4. **The installer to send out.** For Windows there is nothing to build:
+   send `install-cumulate.cmd` from the cumulate repo as it is (it always
+   fetches the latest installer), or have the engineer paste this into
+   PowerShell:
+
+       irm https://raw.githubusercontent.com/ChazzKemal/cumulate/master/install.ps1 | iex
+
+   For macOS, from the cumulate repo in any Unix shell:
 
        ./make-installer.sh <token> you/cumulate you/harvest            # macOS installer
-       ./make-installer.sh <token> you/cumulate you/harvest windows    # install-cumulate.cmd
+
+   (The token is only needed if the repos are private; the Windows installer
+   can be token-baked the same way with `windows` on the end.)
 
 ## Admin: adding an engineer
 
@@ -56,7 +64,10 @@ To remove someone later: delete their row from `allowed_emails` (or set
 1. **Double-click `install-cumulate.cmd`** (the file the admin sent). It
    installs both repos under `%LOCALAPPDATA%\Cumulate`, creates the
    `%USERPROFILE%\Cumulate` workspace, and opens it in Explorer. Per-user
-   only; no admin prompt will ever appear.
+   only; no admin prompt will ever appear. Nothing needs installing first —
+   if the machine has no Git, it fetches a private copy.
+   If Windows warns about a file from the internet, choose **Run** (or
+   **More info → Run anyway**).
 2. **Double-click `Start.cmd`** in that workspace. First run sets everything
    up (a few minutes): Python venvs, Codex, the Entire session recorder.
 3. **A browser page opens — click "Sign in with Google"** and pick the

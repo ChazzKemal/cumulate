@@ -11,6 +11,9 @@ if not defined CUMULATE_APP set "CUMULATE_APP=%~dp0.."
 cd /d "%CUMULATE_APP%"
 if not defined CUMULATE_WORKSPACE set "CUMULATE_WORKSPACE=%CD%"
 
+rem The private Git the installer brings when the machine has none.
+if exist "%LOCALAPPDATA%\Cumulate\git\cmd\git.exe" set "PATH=%LOCALAPPDATA%\Cumulate\git\cmd;%PATH%"
+
 rem Take any update to the shared code before starting. Nothing here is edited
 rem by anyone, so a pull cannot conflict - their own work lives elsewhere.
 if not exist ".git" goto pulled
