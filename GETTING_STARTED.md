@@ -41,6 +41,12 @@ for your project (the one `config.env` points at).
    (The token is only needed if the repos are private; the Windows installer
    can be token-baked the same way with `windows` on the end.)
 
+5. **Optional, recommended: the gateway.** Out of the box every engineer is
+   given the same real OpenAI key. The gateway gives each person their own key
+   with its own budget, shows spend per person, and lets you switch model or
+   provider in one place. Setup is in `gateway/README.md` in the Harvest repo;
+   switching it on is two lines in this repo's `config.env`.
+
 ## Admin: adding an engineer
 
 One step per person. SQL Editor:
