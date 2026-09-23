@@ -59,6 +59,20 @@ if ! command -v codex >/dev/null 2>&1; then
   elif command -v brew >/dev/null 2>&1; then
     brew install codex >/dev/null 2>&1 || true
   fi
+else
+  # Already there - but an old Codex refuses newer models outright, so bring it
+  # up to date. Once a day at most, so an ordinary launch never waits on it.
+  stamp="$HOME/.cumulate/codex-checked"
+  today=$(date +%F)
+  if [ "$(cat "$stamp" 2>/dev/null)" != "$today" ]; then
+    mkdir -p "$HOME/.cumulate" && echo "$today" > "$stamp"
+    say "Checking for assistant updates…"
+    if command -v npm >/dev/null 2>&1 && npm ls -g @openai/codex >/dev/null 2>&1; then
+      npm install -g @openai/codex@latest >/dev/null 2>&1 || true
+    elif command -v brew >/dev/null 2>&1 && brew list codex >/dev/null 2>&1; then
+      brew upgrade codex >/dev/null 2>&1 || true
+    fi
+  fi
 fi
 if ! command -v codex >/dev/null 2>&1; then
   say "The assistant could not be installed automatically."

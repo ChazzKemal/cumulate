@@ -70,12 +70,29 @@ rem package manager, no PATH changes that outlive this window, and no admin.
 set "CUMULATE_BIN=%LOCALAPPDATA%\Cumulate\bin"
 if exist "%CUMULATE_BIN%\codex.exe" set "PATH=%CUMULATE_BIN%;%PATH%"
 where codex >nul 2>&1
-if not errorlevel 1 goto codexok
+if errorlevel 1 goto codexinstall
+
+rem Already there - but an old Codex refuses newer models outright, so bring it
+rem up to date. Once a day at most, so an ordinary launch never waits on it.
+set "CODEX_STAMP=%LOCALAPPDATA%\Cumulate\codex-checked"
+set "CODEX_LAST="
+if exist "%CODEX_STAMP%" set /p CODEX_LAST=<"%CODEX_STAMP%"
+if "%CODEX_LAST%"=="%DATE%" goto codexok
+> "%CODEX_STAMP%" echo %DATE%
+echo   Checking for assistant updates...
+if exist "%CUMULATE_BIN%\codex.exe" goto codexbinary
+rem Only through npm if npm is what put it there - never a second copy.
+call npm ls -g @openai/codex >nul 2>&1
+if not errorlevel 1 call npm install -g @openai/codex@latest >nul 2>&1
+goto codexok
+
+:codexinstall
 
 echo   Installing the assistant...
 where npm >nul 2>&1
 if errorlevel 1 goto codexbinary
-npm install -g @openai/codex >nul 2>&1
+rem npm is itself a batch file: without call it would never hand control back.
+call npm install -g @openai/codex@latest >nul 2>&1
 where codex >nul 2>&1
 if not errorlevel 1 goto codexok
 
@@ -83,7 +100,7 @@ if not errorlevel 1 goto codexok
 if not exist "%CUMULATE_BIN%" mkdir "%CUMULATE_BIN%" >nul 2>&1
 set "CODEX_ARCH=x86_64"
 if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "CODEX_ARCH=aarch64"
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference='SilentlyContinue'; Invoke-WebRequest -Uri 'https://github.com/openai/codex/releases/latest/download/codex-%CODEX_ARCH%-pc-windows-msvc.exe' -OutFile '%CUMULATE_BIN%\codex.exe'" >nul 2>&1
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference='SilentlyContinue'; Invoke-WebRequest -Uri 'https://github.com/openai/codex/releases/latest/download/codex-%CODEX_ARCH%-pc-windows-msvc.exe' -OutFile '%CUMULATE_BIN%\codex.exe.new'; Move-Item -Force '%CUMULATE_BIN%\codex.exe.new' '%CUMULATE_BIN%\codex.exe'" >nul 2>&1
 set "PATH=%CUMULATE_BIN%;%PATH%"
 
 where codex >nul 2>&1
