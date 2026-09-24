@@ -90,10 +90,18 @@ must never stop someone getting their work done.
 
 Codex will ask once whether to trust this folder. Click yes.
 
-Sending it to someone: `./make-installer.sh <token> you/cumulate you/harvest`
-makes the macOS installer, and the same with `windows` on the end makes
-`install-cumulate.cmd` for Windows. Both are double-clickable, both are
-per-user, and neither needs admin rights anywhere.
+Sending it to someone on Windows: give them `install-cumulate.cmd` from this
+repo, or have them paste this into PowerShell:
+
+    irm https://raw.githubusercontent.com/ChazzKemal/cumulate/master/install.ps1 | iex
+
+Nothing needs to be on the machine first — not even Git; the installer brings a
+private copy if there is none. The repos are public, so no token is involved.
+
+For macOS, `./make-installer.sh <token> you/cumulate you/harvest` makes the
+installer (and `windows` on the end makes a token-baked `install-cumulate.cmd`,
+only needed for a private fork). Everything is per-user, and nothing needs
+admin rights anywhere.
 
 ## What's here
 

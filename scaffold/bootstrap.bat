@@ -11,6 +11,9 @@ if not defined CUMULATE_APP set "CUMULATE_APP=%~dp0.."
 cd /d "%CUMULATE_APP%"
 if not defined CUMULATE_WORKSPACE set "CUMULATE_WORKSPACE=%CD%"
 
+rem The private Git the installer brings when the machine has none.
+if exist "%LOCALAPPDATA%\Cumulate\git\cmd\git.exe" set "PATH=%LOCALAPPDATA%\Cumulate\git\cmd;%PATH%"
+
 rem Take any update to the shared code before starting. Nothing here is edited
 rem by anyone, so a pull cannot conflict - their own work lives elsewhere.
 if not exist ".git" goto pulled
@@ -43,6 +46,14 @@ if not exist ".venv\Scripts\python.exe" (
 rem Dependencies change as tools grow; keep them current without a visible step.
 uv pip install -q -r requirements.txt >nul 2>&1
 
+rem Streamlit asks for an email on its very first run and waits for an answer.
+rem The sign-in page runs in a hidden window, so nobody could ever answer and
+rem the page would never load. An empty email is Streamlit's own way to skip it.
+if not exist "%USERPROFILE%\.streamlit\credentials.toml" (
+  mkdir "%USERPROFILE%\.streamlit" >nul 2>&1
+  > "%USERPROFILE%\.streamlit\credentials.toml" (echo [general]& echo email = "")
+)
+
 rem Harvest keeps its own venv - the viewer and capture both need it.
 if not defined HARVEST_DIR goto harvestdone
 if not exist "%HARVEST_DIR%\requirements.txt" goto harvestdone
@@ -59,12 +70,41 @@ rem package manager, no PATH changes that outlive this window, and no admin.
 set "CUMULATE_BIN=%LOCALAPPDATA%\Cumulate\bin"
 if exist "%CUMULATE_BIN%\codex.exe" set "PATH=%CUMULATE_BIN%;%PATH%"
 where codex >nul 2>&1
-if not errorlevel 1 goto codexok
+if errorlevel 1 goto codexinstall
+
+rem Found is not the same as working: a Codex from npm on a Node too old for it
+rem is found but cannot start. Then fetch the standalone build, which goes first
+rem on PATH from then on.
+call codex --version >nul 2>&1
+if errorlevel 1 goto codexbinary
+
+rem Already there - but an old Codex refuses newer models outright, so bring it
+rem up to date. Once a day at most, so an ordinary launch never waits on it.
+set "CODEX_STAMP=%LOCALAPPDATA%\Cumulate\codex-checked"
+set "CODEX_LAST="
+if exist "%CODEX_STAMP%" set /p CODEX_LAST=<"%CODEX_STAMP%"
+if "%CODEX_LAST%"=="%DATE%" goto codexok
+> "%CODEX_STAMP%" echo %DATE%
+echo   Checking for assistant updates...
+if exist "%CUMULATE_BIN%\codex.exe" goto codexbinary
+rem Only through npm if npm is what put it there - never a second copy.
+call npm ls -g @openai/codex >nul 2>&1
+if not errorlevel 1 call npm install -g @openai/codex@latest >nul 2>&1
+goto codexok
+
+:codexinstall
 
 echo   Installing the assistant...
 where npm >nul 2>&1
 if errorlevel 1 goto codexbinary
-npm install -g @openai/codex >nul 2>&1
+rem Codex's npm package needs Node 22 or newer. An older Node - common on older
+rem machines - would install it and then fail to run it, so use the standalone
+rem build instead.
+set "NODE_MAJOR=0"
+for /f "tokens=1 delims=v." %%v in ('node -v 2^>nul') do set "NODE_MAJOR=%%v"
+if %NODE_MAJOR% LSS 22 goto codexbinary
+rem npm is itself a batch file: without call it would never hand control back.
+call npm install -g @openai/codex@latest >nul 2>&1
 where codex >nul 2>&1
 if not errorlevel 1 goto codexok
 
@@ -72,7 +112,7 @@ if not errorlevel 1 goto codexok
 if not exist "%CUMULATE_BIN%" mkdir "%CUMULATE_BIN%" >nul 2>&1
 set "CODEX_ARCH=x86_64"
 if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "CODEX_ARCH=aarch64"
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference='SilentlyContinue'; Invoke-WebRequest -Uri 'https://github.com/openai/codex/releases/latest/download/codex-%CODEX_ARCH%-pc-windows-msvc.exe' -OutFile '%CUMULATE_BIN%\codex.exe'" >nul 2>&1
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference='SilentlyContinue'; Invoke-WebRequest -Uri 'https://github.com/openai/codex/releases/latest/download/codex-%CODEX_ARCH%-pc-windows-msvc.exe' -OutFile '%CUMULATE_BIN%\codex.exe.new'; Move-Item -Force '%CUMULATE_BIN%\codex.exe.new' '%CUMULATE_BIN%\codex.exe'" >nul 2>&1
 set "PATH=%CUMULATE_BIN%;%PATH%"
 
 where codex >nul 2>&1

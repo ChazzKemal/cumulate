@@ -22,9 +22,16 @@ fi
 
 # Someone needs setting up only if they have no key. Signing in is how a key
 # is issued, so a key already in .env means they are ready — never send them
-# back through the browser for it.
+# back through the browser for it. The one exception: with a gateway, a key not
+# issued for it would be refused, so it is swapped for one that is. The sign-in
+# is remembered, so that happens without them doing anything.
+needs_setup() {
+  [ -z "$OPENAI_API_KEY" ] && return 0
+  [ -n "$CUMULATE_GATEWAY" ] && [ "$CUMULATE_KEY_GATEWAY" != "$CUMULATE_GATEWAY" ] && return 0
+  return 1
+}
 NEEDS_SETUP=""
-[ -z "$OPENAI_API_KEY" ] && NEEDS_SETUP=1
+needs_setup && NEEDS_SETUP=1
 
 if [ -n "$NEEDS_SETUP" ]; then
   # No key yet: open the welcome page and wait. Signing in there writes the key
@@ -43,7 +50,7 @@ if [ -n "$NEEDS_SETUP" ]; then
     WAITED=$((WAITED + 2))
     [ -f .env ] && { set -a; . ./.env; set +a; }
     NEEDS_SETUP=""
-    [ -z "$OPENAI_API_KEY" ] && NEEDS_SETUP=1
+    needs_setup && NEEDS_SETUP=1
   done
   pkill -f "scaffold/welcome.py" >/dev/null 2>&1
   if [ -n "$NEEDS_SETUP" ]; then
@@ -93,4 +100,15 @@ echo "  Drag a file onto this window, or drop it in the inbox folder."
 echo
 read -r -p "  Press return to begin."
 
-exec codex "$PROMPT"
+# With a gateway, Codex talks to it rather than to OpenAI - only for this
+# session, never touching the person's own Codex settings.
+CODEX_ARGS=()
+[ -n "$CUMULATE_GATEWAY" ] && CODEX_ARGS+=(
+  -c model_provider=cumulate
+  -c model_providers.cumulate.name=Cumulate
+  -c "model_providers.cumulate.base_url=$CUMULATE_GATEWAY/v1"
+  -c model_providers.cumulate.env_key=OPENAI_API_KEY
+  -c model_providers.cumulate.wire_api=responses)
+[ -n "$CUMULATE_MODEL" ] && CODEX_ARGS+=(-m "$CUMULATE_MODEL")
+
+exec codex "${CODEX_ARGS[@]}" "$PROMPT"

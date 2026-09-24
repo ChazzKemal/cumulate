@@ -26,11 +26,14 @@ if exist ".env" (
 
 rem Someone needs setting up only if they have no key. Signing in is how a key
 rem is issued, so a key already in .env means they are ready - never send them
-rem back through the browser for it.
+rem back through the browser for it. The one exception: with a gateway, a key
+rem not issued for it would be refused, so it is swapped for one that is. The
+rem sign-in is remembered, so that happens without them doing anything.
 rem Labels cannot live inside a parenthesised block in batch, so this whole
 rem stretch runs at top level.
 set "NEEDS_SETUP="
 if "!OPENAI_API_KEY!"=="" set "NEEDS_SETUP=1"
+if defined CUMULATE_GATEWAY if not "!CUMULATE_KEY_GATEWAY!"=="!CUMULATE_GATEWAY!" set "NEEDS_SETUP=1"
 if not defined NEEDS_SETUP goto ready
 
 echo.
@@ -52,6 +55,7 @@ if exist .env for /f "usebackq eol=# tokens=1,* delims==" %%a in (".env") do set
 rem Delayed expansion: %VAR% would be fixed at parse time and never see the key.
 set "NEEDS_SETUP="
 if "!OPENAI_API_KEY!"=="" set "NEEDS_SETUP=1"
+if defined CUMULATE_GATEWAY if not "!CUMULATE_KEY_GATEWAY!"=="!CUMULATE_GATEWAY!" set "NEEDS_SETUP=1"
 if not defined NEEDS_SETUP goto gotkey
 if !WAITED! LSS 600 goto waitkey
 
@@ -98,6 +102,19 @@ echo.
 echo   Drag a file onto this window, or drop it in the inbox folder.
 echo.
 
+rem With a gateway, Codex talks to it rather than to OpenAI - only for this
+rem session, never touching the person's own Codex settings.
+set "CODEX_ARGS="
+if defined CUMULATE_GATEWAY set "CODEX_ARGS=-c model_provider=cumulate -c model_providers.cumulate.name=Cumulate -c model_providers.cumulate.base_url=%CUMULATE_GATEWAY%/v1 -c model_providers.cumulate.env_key=OPENAI_API_KEY -c model_providers.cumulate.wire_api=responses"
+if defined CUMULATE_MODEL set "CODEX_ARGS=!CODEX_ARGS! -m %CUMULATE_MODEL%"
+
+rem call, not a bare codex: npm's codex.cmd ends with endLocal and a jump to a
+rem label that does not exist, which - unless it was called - tears down this
+rem script's setlocal before codex starts. Everything set here would be gone:
+rem the key, the shared settings, the PATH the bootstrap built.
+rem call expands percent signs a second time, so double them first, or a % in a
+rem file name would vanish from the prompt.
+set "PROMPT=!PROMPT:%%=%%%%!"
 rem Percent expansion, deliberately: the npm cmd-shim re-parses its arguments,
 rem so a !PROMPT! written here would reach codex as the literal text.
-codex "%PROMPT%"
+call codex %CODEX_ARGS% "%PROMPT%"

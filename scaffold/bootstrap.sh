@@ -43,6 +43,14 @@ fi
 # Dependencies change as tools grow; keep them current without a visible step.
 uv pip install -q -r requirements.txt >/dev/null 2>&1 || true
 
+# Streamlit asks for an email on its very first run and waits for an answer.
+# The sign-in page runs in the background, so nobody could ever answer and the
+# page would never load. An empty email is Streamlit's own way to skip it.
+if [ ! -f "$HOME/.streamlit/credentials.toml" ]; then
+  mkdir -p "$HOME/.streamlit"
+  printf '[general]\nemail = ""\n' > "$HOME/.streamlit/credentials.toml"
+fi
+
 # --- the assistant -----------------------------------------------------------
 if ! command -v codex >/dev/null 2>&1; then
   say "Installing the assistant…"
@@ -50,6 +58,20 @@ if ! command -v codex >/dev/null 2>&1; then
     npm install -g @openai/codex >/dev/null 2>&1 || true
   elif command -v brew >/dev/null 2>&1; then
     brew install codex >/dev/null 2>&1 || true
+  fi
+else
+  # Already there - but an old Codex refuses newer models outright, so bring it
+  # up to date. Once a day at most, so an ordinary launch never waits on it.
+  stamp="$HOME/.cumulate/codex-checked"
+  today=$(date +%F)
+  if [ "$(cat "$stamp" 2>/dev/null)" != "$today" ]; then
+    mkdir -p "$HOME/.cumulate" && echo "$today" > "$stamp"
+    say "Checking for assistant updates…"
+    if command -v npm >/dev/null 2>&1 && npm ls -g @openai/codex >/dev/null 2>&1; then
+      npm install -g @openai/codex@latest >/dev/null 2>&1 || true
+    elif command -v brew >/dev/null 2>&1 && brew list codex >/dev/null 2>&1; then
+      brew upgrade codex >/dev/null 2>&1 || true
+    fi
   fi
 fi
 if ! command -v codex >/dev/null 2>&1; then

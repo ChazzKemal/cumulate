@@ -4,8 +4,14 @@ Two roles. The **admin** (you) sets up the backend once and approves each
 engineer's email. The **engineer** double-clicks two files and signs in with
 Google — no terminal, no keys to paste.
 
-Works on **Windows 10/11** and **macOS**. Everything installs per-user; no
-admin rights are needed on the engineer's machine.
+Works on **64-bit Windows 10 (fully updated) or 11**, and **macOS**. Everything
+installs per-user; no admin rights are needed on the engineer's machine, and
+nothing needs to be installed on it first. The installer checks the machine
+and says plainly if it is too old.
+
+No engineer ever holds your OpenAI key. It lives only on the gateway; each
+person is given their own gateway key, with its own budget, that works nowhere
+else and can be revoked on its own.
 
 ---
 
@@ -21,17 +27,25 @@ for your project (the one `config.env` points at).
    Google OAuth client id and secret (from Google Cloud Console, with the
    Supabase callback URL). Authentication → URL Configuration → add
    `http://localhost:8501` to the allowed redirect URLs.
-3. **Deploy the key-issuing function.** From the Harvest repo folder, with the
-   Supabase CLI linked to your project:
+3. **Set up the gateway and the key-issuing function.** Follow
+   `gateway/README.md` in the Harvest repo (about 15 minutes, free, nothing to
+   host). It sets up the gateway, a Cloudflare Worker and the only place your
+   OpenAI key goes, deploys `issue-key`, and ends with two lines in this
+   repo's `config.env` (`CUMULATE_GATEWAY`, `CUMULATE_MODEL`).
 
-       supabase functions deploy issue-key
-       supabase secrets set FALLBACK_OPENAI_KEY=sk-<your OpenAI key>
+4. **The installer to send out.** For Windows there is nothing to build:
+   send `install-cumulate.cmd` from the cumulate repo as it is (it always
+   fetches the latest installer), or have the engineer paste this into
+   PowerShell:
 
-4. **Build the installer to send out.** From the cumulate repo, in Git Bash
-   (or any Unix shell):
+       irm https://raw.githubusercontent.com/ChazzKemal/cumulate/master/install.ps1 | iex
+
+   For macOS, from the cumulate repo in any Unix shell:
 
        ./make-installer.sh <token> you/cumulate you/harvest            # macOS installer
-       ./make-installer.sh <token> you/cumulate you/harvest windows    # install-cumulate.cmd
+
+   (The token is only needed if the repos are private; the Windows installer
+   can be token-baked the same way with `windows` on the end.)
 
 ## Admin: adding an engineer
 
@@ -44,8 +58,9 @@ Sign-in is open to anyone with a Google account, but the key — and therefore
 anything that costs money — is only issued to emails in this table. Everyone
 else gets a 403 and spends nothing.
 
-To remove someone later: delete their row from `allowed_emails` (or set
-`revoked` on their `api_keys` row if they have a personal key).
+To remove someone later: delete their row from `allowed_emails`. Their key
+stops working within 30 seconds. Budgets and spend per person are a few lines
+of SQL, given in `gateway/README.md` in the Harvest repo.
 
 ---
 
@@ -56,12 +71,15 @@ To remove someone later: delete their row from `allowed_emails` (or set
 1. **Double-click `install-cumulate.cmd`** (the file the admin sent). It
    installs both repos under `%LOCALAPPDATA%\Cumulate`, creates the
    `%USERPROFILE%\Cumulate` workspace, and opens it in Explorer. Per-user
-   only; no admin prompt will ever appear.
+   only; no admin prompt will ever appear. Nothing needs installing first —
+   if the machine has no Git, it fetches a private copy.
+   If Windows warns about a file from the internet, choose **Run** (or
+   **More info → Run anyway**).
 2. **Double-click `Start.cmd`** in that workspace. First run sets everything
    up (a few minutes): Python venvs, Codex, the Entire session recorder.
 3. **A browser page opens — click "Sign in with Google"** and pick the
-   approved account. The page says you're all set; the OpenAI key is written
-   into the workspace `.env` automatically. Nothing to copy or paste.
+   approved account. The page says you're all set; your personal key is
+   written into the workspace `.env` automatically. Nothing to copy or paste.
 4. Back in the window, **Codex asks once whether to trust this folder and its
    hooks — press `y`/`t` to accept.** Then it greets you; type what you need.
 
@@ -110,8 +128,12 @@ folder shows their own local sessions and knowledge. It needs no account.
 ## If something goes wrong
 
 - **Sign-in page never opens / "no key" loop** — check the email is in
-  `allowed_emails` (exact address, lowercase) and that `issue-key` is deployed
-  with `FALLBACK_OPENAI_KEY` set.
+  `allowed_emails` (exact address, lowercase), that `issue-key` is deployed,
+  and that `CUMULATE_GATEWAY` in `config.env` is the gateway's address.
+- **Codex says "This key is not valid any more"** — they were removed from
+  `allowed_emails`. Once they are approved again, starting Cumulate again
+  issues a new key.
+- **Codex says the budget is used up** — raise it (`gateway/README.md`).
 - **Session recording missing** — startup continues without it by design.
   Re-run `Start.cmd`; the bootstrap retries the Entire install (Scoop or a
   direct download on Windows, Homebrew/install.sh on macOS).
