@@ -155,6 +155,12 @@ set "PATH=%CUMULATE_BIN%;%PATH%"
 :entiredone
 
 cd /d "%CUMULATE_WORKSPACE%"
+rem The installer makes the workspace a git repository but never commits to it,
+rem and the recorder can start no session in a repository without a commit - it
+rem fails at every start and records nothing. One empty commit, once. A fixed
+rem name, so it works for someone who has never told git who they are.
+if exist ".git" git rev-parse --verify -q HEAD >nul 2>&1
+if exist ".git" if errorlevel 1 git -c user.name=Cumulate -c user.email=cumulate@localhost commit -q --allow-empty -m "Start of this workspace" >nul 2>&1
 where entire >nul 2>&1
 if errorlevel 1 (
   echo   Session recording is not available on this machine. Carrying on.

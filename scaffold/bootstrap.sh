@@ -99,6 +99,15 @@ if ! command -v entire >/dev/null 2>&1; then
   export PATH
 fi
 
+# The installer makes the workspace a git repository but never commits to it,
+# and the recorder can start no session in a repository without a commit — it
+# fails at every start and records nothing. One empty commit, once. A fixed
+# name, so it works for someone who has never told git who they are.
+if [ -d "$WORKSPACE/.git" ] && ! git -C "$WORKSPACE" rev-parse --verify -q HEAD >/dev/null 2>&1; then
+  git -C "$WORKSPACE" -c user.name=Cumulate -c user.email=cumulate@localhost \
+    commit -q --allow-empty -m "Start of this workspace" >/dev/null 2>&1 || true
+fi
+
 if command -v entire >/dev/null 2>&1; then
   [ -f "$WORKSPACE/.entire/settings.json" ] || (cd "$WORKSPACE" && entire enable --agent codex) >/dev/null 2>&1 || true
 fi
