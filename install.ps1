@@ -35,6 +35,24 @@ $ProgressPreference = "SilentlyContinue"
 
 function Say($m) { Write-Host "  $m" }
 
+# Codex, the assistant everything runs on, is built for 64-bit Windows 10 and 11
+# only. Say so up front, rather than failing halfway with something cryptic.
+# `return`, not `exit`: run as `irm ... | iex`, exit would close their window.
+$os = [Environment]::OSVersion.Version
+$is64 = [Environment]::Is64BitOperatingSystem
+if ($os.Major -lt 10 -or -not $is64) {
+  $name = (Get-CimInstance Win32_OperatingSystem).Caption
+  Say "Cumulate needs 64-bit Windows 10 or 11. This computer has $name ($(if ($is64) { '64' } else { '32' })-bit)."
+  Say "Nothing has been installed."
+  return
+}
+# Codex supports Windows 10 only when it is fully updated (22H2, build 19045).
+if ($os.Build -lt 19045) {
+  Say "This Windows 10 is not fully updated. Cumulate will install, but if the"
+  Say "assistant misbehaves, run Windows Update and try again."
+  Say ""
+}
+
 # No Git? Bring a private one: MinGit, unzipped under %LOCALAPPDATA%. No
 # installer, no admin, no PATH change that outlives this window -
 # bootstrap.bat puts it on PATH for every launch.

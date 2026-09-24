@@ -72,6 +72,12 @@ if exist "%CUMULATE_BIN%\codex.exe" set "PATH=%CUMULATE_BIN%;%PATH%"
 where codex >nul 2>&1
 if errorlevel 1 goto codexinstall
 
+rem Found is not the same as working: a Codex from npm on a Node too old for it
+rem is found but cannot start. Then fetch the standalone build, which goes first
+rem on PATH from then on.
+call codex --version >nul 2>&1
+if errorlevel 1 goto codexbinary
+
 rem Already there - but an old Codex refuses newer models outright, so bring it
 rem up to date. Once a day at most, so an ordinary launch never waits on it.
 set "CODEX_STAMP=%LOCALAPPDATA%\Cumulate\codex-checked"
@@ -91,6 +97,12 @@ goto codexok
 echo   Installing the assistant...
 where npm >nul 2>&1
 if errorlevel 1 goto codexbinary
+rem Codex's npm package needs Node 22 or newer. An older Node - common on older
+rem machines - would install it and then fail to run it, so use the standalone
+rem build instead.
+set "NODE_MAJOR=0"
+for /f "tokens=1 delims=v." %%v in ('node -v 2^>nul') do set "NODE_MAJOR=%%v"
+if %NODE_MAJOR% LSS 22 goto codexbinary
 rem npm is itself a batch file: without call it would never hand control back.
 call npm install -g @openai/codex@latest >nul 2>&1
 where codex >nul 2>&1
