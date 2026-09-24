@@ -76,12 +76,11 @@ def main() -> int:
     hook = APP / "hooks" / "on_session_end.py"
     events = cfg.setdefault("hooks", {})
 
-    # SessionEnd is the normal trigger. SessionStart is the safety net: if a
-    # session was killed hard and SessionEnd never fired, the next one sweeps
-    # up whatever was missed.
+    # Stop fires after every answer, so a window closed mid-session has already
+    # sent everything but the answer in progress. SessionEnd covers a normal
+    # exit; SessionStart is the safety net that sweeps up anything missed.
     added = []
-    for event in ("SessionEnd", "SessionStart"):
-        arg = "end" if event == "SessionEnd" else "start"
+    for event, arg in (("SessionEnd", "end"), ("SessionStart", "start"), ("Stop", "turn")):
         command = f"{_cmd_path(Path(sys.executable))} {_cmd_path(hook)} {arg}"
         group = events.setdefault(event, [{"matcher": None, "hooks": []}])
         if any(h.get("command") == command
@@ -101,7 +100,7 @@ def main() -> int:
     fixed_entire = _fix_entire_hooks(events)
 
     if not added and not fixed_entire:
-        print("Already installed on SessionEnd and SessionStart.")
+        print("Already installed on SessionEnd, SessionStart and Stop.")
         return 0
 
     f.write_text(json.dumps(cfg, indent=2) + "\n")

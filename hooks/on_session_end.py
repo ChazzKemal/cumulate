@@ -1,4 +1,9 @@
-"""Fired by Codex on SessionStart and SessionEnd.
+"""Fired by Codex on SessionStart, SessionEnd, and Stop (after every answer).
+
+Stop is what makes closing the window safe: that kills Codex outright, so
+SessionEnd never fires, and the session would wait for the next start to be
+sent. Captured after every answer, the most a closed window loses is the answer
+still being written.
 
 Replaces the shell version so it works the same on Windows, where there is no
 `sh` and the hook would otherwise never run — meaning nothing captured, and an
@@ -75,7 +80,10 @@ def main() -> int:
             payload = json.load(sys.stdin) or {}
         except Exception:
             payload = {}
-    if event == "end":
+    # A finished answer ("turn") is kept like an ended session - the session is
+    # still open, so capture would otherwise skip it. Each later answer updates
+    # the same record.
+    if event in ("end", "turn"):
         ended = payload.get("session_id") or ""
 
     # Codex says where the session ran, which is the workspace. The launcher's
