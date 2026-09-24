@@ -30,6 +30,35 @@ def _python() -> Path | None:
     return None
 
 
+def _settings() -> tuple[dict, Path]:
+    """The environment for the capture, and the folder to capture from.
+
+    The folder is the person's workspace, never the code. On an installed
+    machine the two are different places, and capturing from the code found
+    none of their sessions: they worked all week and never appeared. It only
+    looked fine on a machine where both are the same folder.
+
+    The environment carries the shared connection settings, none of them
+    secret, whether or not the hook inherited them from the launcher. Harvest
+    otherwise looks for its own `.env`, which only exists on the admin's
+    machine, and without them the upload finds no store and says nothing.
+    A key that belongs to this machine is not handed over.
+    """
+    env = dict(os.environ)
+    try:
+        sys.path.insert(0, str(REPO / "scaffold"))
+        from paths import load_settings, workspace
+
+        load_settings()
+        where = workspace()
+    except Exception:
+        return env, REPO
+    for key, value in os.environ.items():
+        if key.startswith(("SUPABASE_", "CUMULATE_", "HARVEST_")):
+            env[key] = value
+    return env, where
+
+
 def main() -> int:
     event = sys.argv[1] if len(sys.argv) > 1 else "start"
     python = _python()
@@ -40,13 +69,23 @@ def main() -> int:
     # just finished is the only reliable way to tell "done" from "idle for a
     # moment" — Entire reports both as idle.
     ended = ""
-    if event == "end" and not sys.stdin.isatty():
+    payload = {}
+    if not sys.stdin.isatty():
         try:
-            ended = (json.load(sys.stdin) or {}).get("session_id") or ""
+            payload = json.load(sys.stdin) or {}
         except Exception:
-            ended = ""
+            payload = {}
+    if event == "end":
+        ended = payload.get("session_id") or ""
 
-    cmd = [str(python), "-u", "-m", "harvest", "capture", "--repo", str(REPO)]
+    # Codex says where the session ran, which is the workspace. The launcher's
+    # own setting is kept when there is one; this covers a hook that did not
+    # inherit it.
+    if payload.get("cwd"):
+        os.environ.setdefault("CUMULATE_WORKSPACE", payload["cwd"])
+    env, workspace = _settings()
+
+    cmd = [str(python), "-u", "-m", "harvest", "capture", "--repo", str(workspace)]
     if ended:
         cmd += ["--ended", ended]
 
@@ -56,7 +95,7 @@ def main() -> int:
         log.flush()
         # Detach completely, so closing the session cannot kill the capture.
         kwargs = {"stdout": log, "stderr": log, "stdin": subprocess.DEVNULL,
-                  "cwd": str(HARVEST)}
+                  "cwd": str(HARVEST), "env": env}
         if os.name == "nt":
             kwargs["creationflags"] = (subprocess.CREATE_NEW_PROCESS_GROUP
                                        | getattr(subprocess, "DETACHED_PROCESS", 0))
