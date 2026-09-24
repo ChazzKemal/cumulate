@@ -4,8 +4,14 @@ Two roles. The **admin** (you) sets up the backend once and approves each
 engineer's email. The **engineer** double-clicks two files and signs in with
 Google — no terminal, no keys to paste.
 
-Works on **Windows 10/11** and **macOS**. Everything installs per-user; no
-admin rights are needed on the engineer's machine.
+Works on **64-bit Windows 10 (fully updated) or 11**, and **macOS**. Everything
+installs per-user; no admin rights are needed on the engineer's machine, and
+nothing needs to be installed on it first. The installer checks the machine
+and says plainly if it is too old.
+
+No engineer ever holds your OpenAI key. It lives only on the gateway; each
+person is given their own gateway key, with its own budget, that works nowhere
+else and can be revoked on its own.
 
 ---
 
@@ -21,11 +27,11 @@ for your project (the one `config.env` points at).
    Google OAuth client id and secret (from Google Cloud Console, with the
    Supabase callback URL). Authentication → URL Configuration → add
    `http://localhost:8501` to the allowed redirect URLs.
-3. **Deploy the key-issuing function.** From the Harvest repo folder, with the
-   Supabase CLI linked to your project:
-
-       supabase functions deploy issue-key
-       supabase secrets set FALLBACK_OPENAI_KEY=sk-<your OpenAI key>
+3. **Set up the gateway and the key-issuing function.** Follow
+   `gateway/README.md` in the Harvest repo: it deploys the gateway (the only
+   place your OpenAI key goes), points `issue-key` at it and deploys it, and
+   ends with two lines in this repo's `config.env` (`CUMULATE_GATEWAY`,
+   `CUMULATE_MODEL`).
 
 4. **The installer to send out.** For Windows there is nothing to build:
    send `install-cumulate.cmd` from the cumulate repo as it is (it always
@@ -41,12 +47,6 @@ for your project (the one `config.env` points at).
    (The token is only needed if the repos are private; the Windows installer
    can be token-baked the same way with `windows` on the end.)
 
-5. **Optional, recommended: the gateway.** Out of the box every engineer is
-   given the same real OpenAI key. The gateway gives each person their own key
-   with its own budget, shows spend per person, and lets you switch model or
-   provider in one place. Setup is in `gateway/README.md` in the Harvest repo;
-   switching it on is two lines in this repo's `config.env`.
-
 ## Admin: adding an engineer
 
 One step per person. SQL Editor:
@@ -58,8 +58,10 @@ Sign-in is open to anyone with a Google account, but the key — and therefore
 anything that costs money — is only issued to emails in this table. Everyone
 else gets a 403 and spends nothing.
 
-To remove someone later: delete their row from `allowed_emails` (or set
-`revoked` on their `api_keys` row if they have a personal key).
+To remove someone later: delete or block their key in the gateway's admin
+UI, where it is listed under their email — that alone cuts them off. Also
+delete their `allowed_emails` row so they cannot be approved again by accident.
+Spend per person and budgets are in the same admin UI.
 
 ---
 
@@ -77,8 +79,8 @@ To remove someone later: delete their row from `allowed_emails` (or set
 2. **Double-click `Start.cmd`** in that workspace. First run sets everything
    up (a few minutes): Python venvs, Codex, the Entire session recorder.
 3. **A browser page opens — click "Sign in with Google"** and pick the
-   approved account. The page says you're all set; the OpenAI key is written
-   into the workspace `.env` automatically. Nothing to copy or paste.
+   approved account. The page says you're all set; your personal key is
+   written into the workspace `.env` automatically. Nothing to copy or paste.
 4. Back in the window, **Codex asks once whether to trust this folder and its
    hooks — press `y`/`t` to accept.** Then it greets you; type what you need.
 
@@ -127,8 +129,10 @@ folder shows their own local sessions and knowledge. It needs no account.
 ## If something goes wrong
 
 - **Sign-in page never opens / "no key" loop** — check the email is in
-  `allowed_emails` (exact address, lowercase) and that `issue-key` is deployed
-  with `FALLBACK_OPENAI_KEY` set.
+  `allowed_emails` (exact address, lowercase), that the gateway is up, and that
+  `issue-key` is deployed with `LITELLM_URL` and `LITELLM_MASTER_KEY` set.
+  If their key was deleted on the gateway, they are refused until you delete
+  their `api_keys` row (then they get a new key at next start).
 - **Session recording missing** — startup continues without it by design.
   Re-run `Start.cmd`; the bootstrap retries the Entire install (Scoop or a
   direct download on Windows, Homebrew/install.sh on macOS).
