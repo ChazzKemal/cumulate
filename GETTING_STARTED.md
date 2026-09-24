@@ -130,9 +130,9 @@ folder shows their own local sessions and knowledge. It needs no account.
 - **Sign-in page never opens / "no key" loop** — check the email is in
   `allowed_emails` (exact address, lowercase), that `issue-key` is deployed,
   and that `CUMULATE_GATEWAY` in `config.env` is the gateway's address.
-- **Codex says "This key is not valid any more"** — they were removed, or
-  signed in on another machine (each sign-in replaces the last key). Starting
-  Cumulate again issues a new key if they are still approved.
+- **Codex says "This key is not valid any more"** — they were removed from
+  `allowed_emails`. Once they are approved again, starting Cumulate again
+  issues a new key.
 - **Codex says the budget is used up** — raise it (`gateway/README.md`).
 - **Session recording missing** — startup continues without it by design.
   Re-run `Start.cmd`; the bootstrap retries the Entire install (Scoop or a
