@@ -28,10 +28,10 @@ for your project (the one `config.env` points at).
    Supabase callback URL). Authentication → URL Configuration → add
    `http://localhost:8501` to the allowed redirect URLs.
 3. **Set up the gateway and the key-issuing function.** Follow
-   `gateway/README.md` in the Harvest repo: it deploys the gateway (the only
-   place your OpenAI key goes), points `issue-key` at it and deploys it, and
-   ends with two lines in this repo's `config.env` (`CUMULATE_GATEWAY`,
-   `CUMULATE_MODEL`).
+   `gateway/README.md` in the Harvest repo (about 15 minutes, free, nothing to
+   host). It sets up the gateway, a Cloudflare Worker and the only place your
+   OpenAI key goes, deploys `issue-key`, and ends with two lines in this
+   repo's `config.env` (`CUMULATE_GATEWAY`, `CUMULATE_MODEL`).
 
 4. **The installer to send out.** For Windows there is nothing to build:
    send `install-cumulate.cmd` from the cumulate repo as it is (it always
@@ -58,10 +58,9 @@ Sign-in is open to anyone with a Google account, but the key — and therefore
 anything that costs money — is only issued to emails in this table. Everyone
 else gets a 403 and spends nothing.
 
-To remove someone later: delete or block their key in the gateway's admin
-UI, where it is listed under their email — that alone cuts them off. Also
-delete their `allowed_emails` row so they cannot be approved again by accident.
-Spend per person and budgets are in the same admin UI.
+To remove someone later: delete their row from `allowed_emails`. Their key
+stops working within 30 seconds. Budgets and spend per person are a few lines
+of SQL, given in `gateway/README.md` in the Harvest repo.
 
 ---
 
@@ -129,10 +128,12 @@ folder shows their own local sessions and knowledge. It needs no account.
 ## If something goes wrong
 
 - **Sign-in page never opens / "no key" loop** — check the email is in
-  `allowed_emails` (exact address, lowercase), that the gateway is up, and that
-  `issue-key` is deployed with `LITELLM_URL` and `LITELLM_MASTER_KEY` set.
-  If their key was deleted on the gateway, they are refused until you delete
-  their `api_keys` row (then they get a new key at next start).
+  `allowed_emails` (exact address, lowercase), that `issue-key` is deployed,
+  and that `CUMULATE_GATEWAY` in `config.env` is the gateway's address.
+- **Codex says "This key is not valid any more"** — they were removed, or
+  signed in on another machine (each sign-in replaces the last key). Starting
+  Cumulate again issues a new key if they are still approved.
+- **Codex says the budget is used up** — raise it (`gateway/README.md`).
 - **Session recording missing** — startup continues without it by design.
   Re-run `Start.cmd`; the bootstrap retries the Entire install (Scoop or a
   direct download on Windows, Homebrew/install.sh on macOS).
